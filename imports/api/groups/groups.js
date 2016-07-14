@@ -1,67 +1,67 @@
 import { Mongo } from 'meteor/mongo';
-import { SimpleSchema, attachSchema } from 'meteor/aldeed:collection2';
+import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Groups = new Mongo.Collection('Groups');
 
 Groups.schema = new SimpleSchema({
   uuid: {
       type: String,
-      label: "Subject",
+      label: 'Subject',
       optional: true,
   },
   fileId: {
       type: String,
-      label: "File Id",
+      label: 'File Id',
   },
   groupId: {
       type: String,
-      label: "Group Id",
+      label: 'Group Id',
       optional: true,
   },
   type: {
       type: String,
-      label: "Type",
+      label: 'Type',
       optional: true,
-      allowedValues: ["menu", "menu_item", "menu_button", "layer", "simpleGroup", "linkedGroup", "parametrizedGroup"],
+      allowedValues: ['menu', 'menu_item', 'menu_button', 'layer', 'simpleGroup', 'linkedGroup', 'parametrizedGroup'],
   },
   ordering: {
       type: Number,
-      label: "Ordering",
+      label: 'Ordering',
       optional: true,
       defaultValue: 100,
   },
   selected: {
       type: String,
-      label: "Selected",
+      label: 'Selected',
       optional: true,
       defaultValue: 'null',
   },
   locked: {
       type: String,
-      label: "Locked",
+      label: 'Locked',
       optional: true,
       defaultValue: 'null',
   },
   transform: {
       type: String,
-      label: "Transform",
+      label: 'Transform',
       optional: true,
   },
   parameters: {
       type: Object,
-      label: "Parameters",
+      label: 'Parameters',
       optional: true,
       blackbox: true,
   },
   transparency: {
       type: Number,
-      label: "Transparency",
+      label: 'Transparency',
       optional: true,
       decimal: true,
   },
   original: {
       type: String,
-      label: "Original",
+      label: 'Original',
       optional: true,
   },
 });

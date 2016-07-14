@@ -1,137 +1,137 @@
 import { Mongo } from 'meteor/mongo';
-import { SimpleSchema, attachSchema } from 'meteor/aldeed:collection2';
+import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Files = new Mongo.Collection('Files');
 
-const fileTypes = ["application/javascript", "image/svg+xml", "image/png", "image/jpeg", "text/css", "text/plain", "application/octet-stream", "gcode"]
+const fileTypes = ['application/javascript', 'image/svg+xml', 'image/png', 'image/jpeg', 'text/css', 'text/plain', 'application/octet-stream', 'gcode']
 
 Files.schema = new SimpleSchema({
   uuid: {
       type: String,
-      label: "Subject",
+      label: 'Subject',
       optional: true,
   },
   title: {
       type: String,
-      label: "Title",
+      label: 'Title',
       optional: true,
   },
   fileType: {
     type: String,
-    label: "File Type",
+    label: 'File Type',
     allowedValues: fileTypes,
   },
   width: {
       type: Number,
-      label: "Width",
+      label: 'Width',
       optional: true,
       decimal: true,
   },
   height: {
       type: Number,
-      label: "Height",
+      label: 'Height',
       optional: true,
       decimal: true,
   },
   dateModified: {
       type: Date,
-      label: "Date Modified",
+      label: 'Date Modified',
       defaultValue: new Date(),
       optional: true,
   },
   dateCreated: {
       type: Date,
-      label: "Date Created",
+      label: 'Date Created',
       defaultValue: new Date(),
       optional: true,
   },
   version: {
       type: String,
-      label: "Version",
+      label: 'Version',
       max: 200,
-      defaultValue: "1",
+      defaultValue: '1',
       optional: true,
   },
   script: {
       type: String,
-      label: "Script",
+      label: 'Script',
       optional: true,
       trim: false,
   },
   permissions: {
       type: Object,
-      label: "Permissions",
+      label: 'Permissions',
       optional: true,
       blackbox: true,
   },
   'permissions.view': {
       type: [String],
-      label: "View Permissions",
+      label: 'View Permissions',
       optional: true,
       defaultValue: [],
   },
   'permissions.edit': {
       type: [String],
-      label: "View Permissions",
+      label: 'View Permissions',
       optional: true,
   },
   creatorId: {
       type: String,
-      label: "Creator",
+      label: 'Creator',
       max: 200,
       optional: true,
   },
   locked: {
       type: String,
-      label: "Locked",
+      label: 'Locked',
       optional: true,
   },
   selected: {
       type: [String],
-      label: "Selected",
+      label: 'Selected',
       optional: true,
       defaultValue: [],
   },
   noofchildren: {
       type: Number,
-      label: "No of children",
+      label: 'No of children',
       optional: true,
       defaultValue: 0,
   },
   structuralpath: {
       type: [String],
-      label: "Structural Path",
+      label: 'Structural Path',
       optional: true,
       defaultValue: [],
   },
   dependencypath: {
       type: [String],
-      label: "Dependency Path",
+      label: 'Dependency Path',
       optional: true,
       defaultValue: [],
   },
   groupids: {
       type: [String],
-      label: "Group Ids",
+      label: 'Group Ids',
       optional: true,
   },
   itemids: {
       type: [String],
-      label: "Item Ids",
+      label: 'Item Ids',
       optional: true,
   },
   original: {
       type: String,
-      label: "Original",
+      label: 'Original',
       optional: true,
   },
   parameters: {
       type: Object,
-      label: "Parameters",
+      label: 'Parameters',
       optional: true,
       blackbox: true,
   },
-  'ordering' {
+  'ordering': {
     type: Number,
     optional: true,
   },

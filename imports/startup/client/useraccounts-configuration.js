@@ -1,1 +1,1 @@
-# configure login templates
+// configure login templates

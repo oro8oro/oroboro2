@@ -20,12 +20,14 @@ mdg:validated-method    # Wrapper package for methods
 aldeed:collection2
 dburles:collection-helpers
 
+accounts-base
+
 
 react-meteor-data       # Meteor data integration for React
 kadira:flow-router
 # kadira:react-layout
 
-apollo
+# apollo
 
 # practicalmeteor:mocha
 # tmeasday:check-npm-versions

@@ -1,10 +1,10 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
-import { SimpleSchema, attachSchema } from 'meteor/aldeed:collection2';
+import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Users = Meteor.users;
 
-UserProfile = new SimpleSchema({
+const UserProfile = new SimpleSchema({
   name: {
       type: String,
       label: 'Name',
@@ -26,7 +26,7 @@ UserProfile = new SimpleSchema({
 
 Users.schema = new SimpleSchema({
   profile: {
-      type: Schemas.UserProfile,
+      type: UserProfile,
       optional: true,
   },
   emails: {
@@ -34,12 +34,12 @@ Users.schema = new SimpleSchema({
       label: 'Email',
       optional: true,
   },
-  "emails.$.address": {
+  'emails.$.address': {
       type: String,
       label: 'Email',
       regEx: SimpleSchema.RegEx.Email,
   },
-  "emails.$.verified": {
+  'emails.$.verified': {
       type: Boolean,
   },
   createdAt: {
@@ -58,7 +58,7 @@ Users.schema = new SimpleSchema({
   },
   parameters: {
       type: Object,
-      label: "Parameters",
+      label: 'Parameters',
       blackbox: true,
       optional: true,
   }
