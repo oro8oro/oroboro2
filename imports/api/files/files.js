@@ -131,11 +131,11 @@ Files.schema = new SimpleSchema({
       optional: true,
       blackbox: true,
   },
-  'ordering': {
+  ordering: {
     type: Number,
     optional: true,
   },
-  'cache': {
+  cache: {
     type: String,
     optional: true,
   },
