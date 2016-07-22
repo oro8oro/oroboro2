@@ -6,6 +6,9 @@ const Items = new Mongo.Collection('Items');
 const itemTypes = ['simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'text', 'rasterImage', 'formulae', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'nestedSvg', 'qrcode', 'gradient', 'markdown', 'pathEquation'];
 
 Items.schema = new SimpleSchema({
+  _id: {
+    type: String
+  },
   groupId: {
       type: String,
       label: 'Group Id',
@@ -169,6 +172,15 @@ Items.schema = new SimpleSchema({
       label: 'Link To',
       optional: true,
   },
+  pathArray: {
+    type: String,
+    optional: true
+  },
+  cache: {
+    type: String,
+    label: 'Cache',
+    optional: true
+  }
 });
 Items.attachSchema(Items.schema);
 

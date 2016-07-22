@@ -6,8 +6,15 @@ import Items from './items/items';
 import Dependencies from './dependencies/dependencies';
 import Users from './users/users';
 
+if(Meteor.isServer) {
+  require('./items/server/publications.js');
+}
 
-export const db = {
+import './classes.js';
+
+import Oroboro from './namespace';
+
+let db = Oroboro.db = {
   Files,
   Groups,
   Items,
@@ -15,10 +22,6 @@ export const db = {
   Users
 };
 
-export const pub = {
+const UI_ROOT = "oroboroApp";
 
-};
-
-export const mtd = {
-
-};
+export { db, UI_ROOT };
