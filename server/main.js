@@ -1,6 +1,8 @@
 import { Meteor } from 'meteor/meteor';
 import { createApolloServer } from 'meteor/apollo';
 
+import '../imports/startup/server/index.js';
+
 /*import filesSchema from '../imports/api/files/schema';
 import filesResolvers from '../imports/api/files/resolvers';
 import filesMocks from '../imports/api/files/mocks';

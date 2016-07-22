@@ -7,7 +7,6 @@
 meteor-base             # Packages every Meteor app needs to have
 mobile-experience       # Packages for a great mobile UX
 mongo                   # The database Meteor supports right now
-reactive-var            # Reactive variable for tracker
 jquery                  # Helpful client-side library
 tracker                 # Meteor's client-side reactive programming library
 
@@ -23,10 +22,10 @@ dburles:collection-helpers
 
 accounts-base
 
+static-html
+
 
 react-meteor-data       # Meteor data integration for React
-kadira:flow-router
-# kadira:react-layout
 
 apollo
 
