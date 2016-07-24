@@ -66,6 +66,10 @@ class Path extends Item {
     return this;
   }
 
+  getCubic() {
+    return this._pointList;
+  }
+
   open() {
 
   }
@@ -91,6 +95,7 @@ class CubicPath extends Path {
   constructor(doc) {
     super(doc);
     let { pathArray } = doc;
+    this._pointList = doc.pointList;
     this._pathArray = JSON.parse(pathArray);
   }
 
@@ -121,10 +126,16 @@ class CubicPath extends Path {
   boolean(path2, type) {
     paper.setup();
     let path1 = new paper.Path(this._svg.attr('d'));
-    let d = path1[type](new paper.Path(path2._svg.attr('d'))).exportSVG();
-    console.log(d);
-    console.log(this)
-    return this._svg.parent().path(d).fill('#00B5AD');
+    let boolres = path1[type](new paper.Path(path2._svg.attr('d')));
+    if(type != 'divide') {
+      let d = boolres.exportSVG();
+      return this._svg.parent().path(d).fill('#00B5AD');
+    };
+
+    boolres._children.forEach((r, i) => {
+      let d = r.exportSVG();
+      this._svg.parent().path(d).fill(`#${2*i}${2*i}B5AD`);
+    });
   }
 
   unite(path2) {
