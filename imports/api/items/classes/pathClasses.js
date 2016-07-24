@@ -4,8 +4,7 @@ import Oroboro from '../../namespace';
 import Items from '../items';
 import '../methods';
 
-import '../../../utils/BooleanOperations.js';
-//import BooleanOperation from '../../../utils/BooleanOperation';
+import { paper } from '../../../utils/BooleanOperations';
 //Oroboro.BooleanOperation = BooleanOperation;
 
 let PathFactory;
@@ -120,8 +119,32 @@ class CubicPath extends Path {
   }
 
   boolean(path2, type) {
+    paper.setup();
+    let path1 = new paper.Path(this._svg.attr('d'));
+    let d = path1[type](new paper.Path(path2._svg.attr('d'))).exportSVG();
+    console.log(d);
+    console.log(this)
+    return this._svg.parent().path(d).fill('#00B5AD');
+  }
 
-    return this;
+  unite(path2) {
+    return this.boolean(path2, 'unite');
+  }
+
+  subtract(path2) {
+    return this.boolean(path2, 'subtract');
+  }
+
+  exclude(path2) {
+    return this.boolean(path2, 'exclude');
+  }
+
+  intersect(path2) {
+    return this.boolean(path2, 'intersect');
+  }
+
+  divide(path2) {
+    return this.boolean(path2, 'divide');
   }
 };
 
