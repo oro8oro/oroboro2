@@ -5,4 +5,4 @@ export default Oroboro = {
   waitOn: {},
 };
 if(Meteor.isClient && Meteor.isDevelopment)
-  window.Oroboro = Oroboro;
+  window.Oroboro = window.oro = Oroboro;
