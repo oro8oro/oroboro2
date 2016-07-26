@@ -9,19 +9,12 @@ import { paper } from '../../../utils/BooleanOperations';
 
 let PathFactory;
 
-PathFactory = obj => {
-  let path;
-  switch(obj.type) {
-    case 'simple_path':
-      path = new SimplePath(obj);
-      break;
-    case 'complex_path':
-      path = new CubicPath(obj);
-      break;
-    default:
-      path = new CubicPath(obj);
-  }
-  return path;
+PathFactory = (obj, parent) => {
+  if(!Oroboro.classes[obj.type])
+    throw new Oroboro.Error('undefined-class', `There is no <${obj.type}> class.`);
+  if(obj._id)
+    return new Oroboro.classes[obj.type](obj);
+  return Item.insert(obj, parent);
 };
 
 class Item {
@@ -33,6 +26,15 @@ class Item {
     if(typeof el == 'string')
       return SVG.get(el) || SVG(el);
     return el;
+  }
+
+  static insert(obj, parent) {
+    obj.pointList = obj.pointList || '[[]]';
+    obj.pathArray = obj.pathArray || '[[]]';
+    obj._id = Items.methods.insert.call(obj);
+    let item = PathFactory(obj).draw(parent);
+    Oroboro.waitOn[obj._id] = item;
+    return item;
   }
 }
 
@@ -112,10 +114,12 @@ class CubicPath extends Path {
     // insert in db
     let obj = Object.assign({}, this._doc);
     obj.original = this._id;
-    obj._id = Items.methods.insert.call(obj);
+    return Item.insert(obj, this._parent);
+    
+    /*obj._id = Items.methods.insert.call(obj);
     let clone = PathFactory(obj).draw(this._parent);
     Oroboro.waitOn[obj._id] = clone;
-    return clone;
+    return clone;*/
   }
 
   update() {
@@ -187,12 +191,19 @@ class SimplePath extends CubicPath {
     return this;
   }
 
+  add(p) {
+    const { _pointList } = this;
+    _pointList[_pointList.length-1].push(p);
+    this.update();
+  }
+
   toCubic() {
     // return CubicPath instance
   }
 
   getPathArray() {
     const { _pointList, _closed } = this;
+
     return _pointList.reduce((a,b) => {
       let len = b.length-1;
 
@@ -225,6 +236,7 @@ class SimplePath extends CubicPath {
   getCubic() {
     const { _pointList, _closed } = this;
     let path = "";
+
     _pointList.forEach(p => {
       if(!_closed)
           path = path + "M" + p.join(" ");
@@ -234,7 +246,6 @@ class SimplePath extends CubicPath {
     return path;
   }
 };
-
 
 
 export { PathFactory, Item, Path, CubicPath, SimplePath };

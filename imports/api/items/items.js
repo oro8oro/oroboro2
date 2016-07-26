@@ -3,11 +3,12 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Items = new Mongo.Collection('Items');
 
-const itemTypes = ['simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'text', 'rasterImage', 'formulae', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'nestedSvg', 'qrcode', 'gradient', 'markdown', 'pathEquation'];
+const itemTypes = ['SimplePath', 'CubicPath', 'para_simple_path', 'para_complex_path', 'text', 'rasterImage', 'formulae', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'nestedSvg', 'qrcode', 'gradient', 'markdown', 'pathEquation'];
 
 Items.schema = new SimpleSchema({
   _id: {
-    type: String
+    type: String,
+    optional: true,
   },
   groupId: {
       type: String,
@@ -149,6 +150,7 @@ Items.schema = new SimpleSchema({
       type: String,
       label: 'Selected',
       defaultValue: 'null',
+      optional: true
   },
   locked: {
       type: String,
