@@ -14,6 +14,7 @@ export default EditorComponent = React.createClass({
   componentDidMount() {
     const { container, appProps } = this.props;
     const { items } = appProps;
+    SVG(this.props.container);
     this.createSVG(items, container);
   },
 

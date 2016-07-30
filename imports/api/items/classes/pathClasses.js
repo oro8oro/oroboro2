@@ -1,7 +1,8 @@
 // Path classes
-import SVG from 'svgjs';
-//import '../../../utils/svg.draggy.js';
-
+if(Meteor.isClient) {
+  import SVG from 'svgjs';
+  import 'svg.draggy.js';
+}
 import Oroboro from '../../namespace';
 import Items from '../items';
 import '../methods';
@@ -71,7 +72,7 @@ class Path extends Item {
       this._svg = this.getElement(parent).path(this.getCubic())
         .attr('id', this._id)
         .opacity(0.6)
-        //.draggy();
+        .draggy();
     }
     return this;
   }

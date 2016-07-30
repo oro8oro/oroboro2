@@ -17,7 +17,8 @@
     "react-dom": "^15.2.1",
     "react-router": "^2.6.0",
     "request-promise": "^3.0.0",
-    "svgjs": "^2.2.5"
+    "svgjs": "^2.2.5",
+    "svg.draggy.js": "^1.1.1"
   },
   "devDependencies": {
     "eslint": "^3.0.1",
