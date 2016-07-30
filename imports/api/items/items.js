@@ -41,14 +41,14 @@ Items.schema = new SimpleSchema({
       type: String,
       label: 'Stroke Color',
       optional: true,
-      defaultValue: '000000ff',
+      defaultValue: '#000000',
   },
   'palette.strokeWidth': {
       type: String,
       label: 'Stroke Width',
       optional: true,
       decimal: true,
-      defaultValue: '0',
+      defaultValue: '1',
   },
   'palette.strokeOpacity': {
       type: String,
@@ -61,7 +61,7 @@ Items.schema = new SimpleSchema({
       type: String,
       label: 'Fill Color',
       optional: true,
-      defaultValue: '000000',
+      defaultValue: '#000000',
   },
   'palette.fillOpacity': {
       type: String,
@@ -141,22 +141,22 @@ Items.schema = new SimpleSchema({
       optional: true,
   },
   closed: {
-      type: String,
+      type: Boolean,
       label: 'Closed',
       optional: true,
-      allowedValues: ['true', 'false'],
+      allowedValues: [true, false],
   },
   selected: {
-      type: String,
+      type: Boolean,
       label: 'Selected',
-      defaultValue: 'null',
+      defaultValue: false,
       optional: true
   },
   locked: {
-      type: String,
+      type: Boolean,
       label: 'Locked',
       optional: true,
-      defaultValue: 'null',
+      defaultValue: false,
   },
   parameters: {
       type: Object,

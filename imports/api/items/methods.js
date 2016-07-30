@@ -14,8 +14,29 @@ const itemsInsert = new ValidatedMethod({
   }
 });
 
+const itemsUpdate = new ValidatedMethod({
+  name: 'items.update',
+  validate: null,
+  run({ id, modifier }) {
+    console.log(id)
+    console.log(modifier)
+    Items.update({_id: id}, {$set: modifier});
+  }
+});
+
+const itemsDelete = new ValidatedMethod({
+  name: 'items.delete',
+  validate: null,
+  run(id) {
+    console.log('delete: ' + id)
+    Items.remove(id);
+  }
+});
+
 
 export { itemsInsert };
 Items.methods = {
   insert: itemsInsert,
+  update: itemsUpdate,
+  delete: itemsDelete,
 };
