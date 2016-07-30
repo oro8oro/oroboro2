@@ -10,7 +10,7 @@ import '../methods';
 import { paper } from '../../../utils/BooleanOperations';
 import { getAngle, pointByAngleDistance } from '../../../utils/svgUtils';
 import { spiroToBezier } from '../../../utils/spiro';
-//Oroboro.BooleanOperation = BooleanOperation;
+
 let PathFactory;
 
 PathFactory = (obj, parent) => {
@@ -152,19 +152,29 @@ class CubicPath extends Path {
   }
 
   boolean(path2, type) {
+    setItem = (d) => {
+      let p = this._svg.parent().path(d);
+      let item = Item.insert({
+        type: 'CubicPath', closed: true,
+        pointList: p.attr('d'),
+        pathArray: JSON.stringify(p.array().value),
+      }, this._svg.parent());
+      p.remove();
+      return item;
+    };
+    // TODO: If we receive path2 by id - temporary
     if(typeof path2 == 'string')
       path2 = Oroboro.find(path2);
+
+    // Use Paper.js boolean ops
     paper.setup();
     let path1 = new paper.Path(this._svg.attr('d'));
     let boolres = path1[type](new paper.Path(path2._svg.attr('d')));
     if(type != 'divide') {
-      let d = boolres.exportSVG();
-      return this._svg.parent().path(d).fill('#00B5AD');
+      return setItem(boolres.exportSVG())
     };
-
     return boolres._children.map((r, i) => {
-      let d = r.exportSVG();
-      return this._svg.parent().path(d).fill(`#${2*i}${2*i}B5AD`);
+      return setItem(r.exportSVG());
     });
   }
 
