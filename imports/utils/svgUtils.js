@@ -1,3 +1,5 @@
+let utils = {};
+
 /**
  * @summary Get the center and radius of a circle from 3 points.
  * @desc It finds the unique circle determined by three points.
@@ -7,7 +9,7 @@
  * @param c point object with x and y attributes
  * @return object with center, rv and rh attributes
  */
-circleParams = function(a,b,c) {
+utils.circleParams = function(a,b,c) {
   var d = a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y);
   var center = {
       x: (
@@ -37,7 +39,7 @@ circleParams = function(a,b,c) {
  * @param points array of point objects with x and y attributes
  * @return object with center, rv, rh, rot attributes
  */
-ellipseParams = function(points) {
+utils.ellipseParams = function(points) {
   if(!points || !points.length)
     return;
   var x1 = points[0].x, y1 = points[0].y, 
@@ -151,7 +153,7 @@ var twoPI = 2*Math.PI
  * @param dAngle angle difference
  * @return modified angle value
  */
-turnCW = function(angle, dAngle) {
+utils.turnCW = function(angle, dAngle) {
   angle = angle + dAngle;
   if(angle < 0) angle = twoPI + (angle % twoPI);
   else if(angle > 0) angle = angle % twoPI;
@@ -167,7 +169,7 @@ turnCW = function(angle, dAngle) {
  * @param dAngle angle difference
  * @return modified angle value
  */
-turnCCW = function(angle, dAngle) {
+utils.turnCCW = function(angle, dAngle) {
   return turnCW(angle, -dAngle);
 };
 
@@ -177,13 +179,13 @@ turnCCW = function(angle, dAngle) {
  * @param p2 second point
  * @return distance in pixels
  */
-distance = function(p1,p2) {
+utils.distance = function(p1,p2) {
     if(!p1.x) p1 = {x: p1[0], y: p1[1]}
     if(!p2.x) p2 = {x: p2[0], y: p2[1]}
   return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 }
 
-getAngle = function(center, p1) {
+utils.getAngle = function(center, p1) {
     if(!center.x) center = {x:center[0], y: center[1]}
     if(!p1.x) p1 = {x: p1[0], y: p1[1]}
   var p0 = {
@@ -197,7 +199,8 @@ getAngle = function(center, p1) {
     return angle - Math.PI/2;
   return 3/2*Math.PI + angle;
 };
-pointByAngleDistance = function(center, angle, distance) {
+
+utils.pointByAngleDistance = function(center, angle, distance) {
     if(!center.x)
         return [
             center[0] + distance * Math.cos(angle),
@@ -216,7 +219,7 @@ pointByAngleDistance = function(center, angle, distance) {
  * @param beta 2nd angle
  * @return smaller difference between 1st & 2nd angle
  */
-angleDiff = function(alpha, beta) {
+utils.angleDiff = function(alpha, beta) {
   var dA = Math.abs((alpha - beta) % twoPI);
   return Math.min(twoPI - dA, dA);
 };
@@ -229,7 +232,7 @@ angleDiff = function(alpha, beta) {
  * @param beta 2nd angle
  * @return CW difference between 1st & 2nd angle
  */
-angleDiffCW = function(alpha, beta) {
+utils.angleDiffCW = function(alpha, beta) {
   if(Math.abs(alpha) >= twoPI) alpha = alpha % twoPI;
   if(Math.abs(beta) >= twoPI) beta = beta % twoPI;
   if(alpha < 0) alpha = alpha + twoPI;
@@ -247,78 +250,19 @@ angleDiffCW = function(alpha, beta) {
  * @param beta 2nd angle
  * @return CCW difference between 1st & 2nd angle
  */
-angleDiffCCW = function(alpha, beta) {
+utils.angleDiffCCW = function(alpha, beta) {
   var diffCW = angleDiffCW(alpha, beta);
   if(diffCW == 0) dA = 0;
   else var dA = twoPI - diffCW;
   return dA;
 };
 
-rotatePoint = function(center, p1, dangle) {
+utils.rotatePoint = function(center, p1, dangle) {
     var a = getAngle(center, p1)
     var dist = distance(center, p1)
     a = turnCW(a, dangle)
     return pointByAngleDistance(center, a, dist)
 }
-
-
-ellipseToCPath = function ellipseToCPath(ellipse){
-    var rx = ellipse.rh, ry = ellipse.rv
-    var x = ellipse.x, y= ellipse.y;
-    if(!x) {
-        x = ellipse.cx - rx
-        y = ellipse.cy - ry
-    }
-    var w = rx*2, h = ry*2;
-    var delta = 4 * (Math.sqrt(2) - 1) / 3;
-    var points = [
-        'M', x+w/2, y,
-        'C', x+w/2+rx*delta, y, x+w, y+h/2 -ry*delta, x+w, y+h/2,
-        'C', x+w, y+h/2+ry*delta, x+w/2+rx*delta, y+h, x+w/2, y+h,
-        'C', x+w/2-rx*delta, y+h, x, y+h/2+ry*delta, x, y+h/2,
-        'C', x, y+h/2-ry*delta, x+w/2-rx*delta, y, x+w/2, y,
-        'Z'
-    ]
-    return points;
-}
-
-rectToPath = function rectToPath(rect){
-    var x = rect.x(), y= rect.y(), w = rect.width(), h = rect.height();
-    var params = {width: w, height: h, x: x, y: y, callback: rectToPath};
-    if(rect.attr("rx")){
-        var rx = Number(rect.attr("rx"));
-        var ry = Number(rect.attr("ry"));
-        var delta = 4 * (Math.sqrt(2) - 1) / 3;
-        var points =
-            'M'+ x + ' ' + (y+ry)
-                + 'C' + x + ' ' + (y+ry-ry*delta) + ',' + (x+rx-rx*delta) + ' ' + y + ','
-                + (x+rx) + ' ' + y + 'L'
-                + (x+w-rx) + ' ' + y
-                + 'C' + (x+w-rx+rx*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+ry-ry*delta) + ','
-                + (x+w) + ' ' + (y+ry) + 'L'
-                + (x+w) + ' ' + (y+h-ry)
-                + 'C' + (x+w) + ' ' + (y+h-ry+ry*delta) + ',' + (x+w-rx+rx*delta) + ' ' + (y+h) + ','
-                + (x+w-rx) + ' ' + (y+h) + 'L'
-                + (x+rx) + ' ' + (y+h)
-                + 'C' + (x+rx-rx*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h-ry+ry*delta) + ','
-                + x + ' ' + (y+h-ry) + 'Z';
-        params.rx = rx;
-        params.ry = ry;
-        var type = "complex_path";
-    }
-    else{
-        var points = [ [ [x,y], [x+w,y], [x+w,y+h], [x,y+h] ] ];
-        points =  JSON.stringify(points);
-        var type = "simple_path";
-    }
-    return {pointList: points, type: type, parameters: params};
-}
-
-lineToPath = function lineToPath(line){
-    var points = [ [ [line.attr("x1"), line.attr("y1")], [line.attr("x2"), line.attr("y2")] ] ];
-    return JSON.stringify(points);
-}
-
 
 /*computes intersection between a cubic spline and a line segment*/
 function computeIntersections(px,py,lx,ly,inbounds)
@@ -479,4 +423,81 @@ function pathLine(x,y)
   return "M "+x[0]+" "+y[0]+" L "+x[1]+" "+y[1];
 }
 
-export { getAngle, pointByAngleDistance };
+utils.circleToPath = function (circle) {
+    return utils.ellipseToPath(circle);
+}
+
+utils.ellipseToPath = function (ellipse) {
+    let x = ellipse.x(), 
+      y= ellipse.y(),
+      rx = parseFloat(ellipse.attr("rx") ? ellipse.attr("rx") : ellipse.attr("r")),
+      ry = parseFloat(ellipse.attr("ry") ? ellipse.attr("ry") : rx),
+      w = rx*2, h = ry*2,
+      cx = ellipse.attr("cx"), 
+      cy = ellipse.attr("cy"),
+      delta = 4 * (Math.sqrt(2) - 1) / 3;
+
+    return [
+        [ 'M', (x+w/2), y ],
+        [ 'C', (x+w/2+rx*delta), y, (x+w), (y+h/2 -ry*delta), (x+w), (y+h/2) ],
+        [ 'C', (x+w), (y+h/2+ry*delta), (x+w/2+rx*delta), (y+h), (x+w/2), (y+h) ],
+        [ 'C', (x+w/2-rx*delta), (y+h), x, (y+h/2+ry*delta), x, (y+h/2) ],
+        [ 'C', x, (y+h/2-ry*delta), (x+w/2-rx*delta), y, (x+w/2), y ],
+        [ 'Z' ]
+      ];
+}
+
+utils.rectToPath = function (rect) {
+    let x = rect.x(), 
+      y= rect.y(), 
+      w = rect.width(), 
+      h = rect.height();
+
+    if(!rect.attr("rx")) {
+      return [ 
+        [ 'M', x, y ], 
+        [ 'L', x+w, y ], 
+        [ 'L', x+w, y+h ], 
+        [ 'L', x, y+h ], 
+        [ 'Z'] 
+      ];
+    }
+
+    let rx = Number(rect.attr("rx")),
+      ry = Number(rect.attr("ry")),
+      delta = 4 * (Math.sqrt(2) - 1) / 3;
+    
+    return [
+      [ 'M', x, (y+ry) ],
+      [ 'C', x, (y+ry-ry*delta), (x+rx-rx*delta), y, (x+rx), y ],
+      [ 'L', (x+w-rx), y ],
+      [ 'C', (x+w-rx+rx*delta), y, (x+w), (y+ry-ry*delta), (x+w), (y+ry) ],
+      [ 'L', (x+w), (y+h-ry) ],
+      [ 'C', (x+w), (y+h-ry+ry*delta), (x+w-rx+rx*delta), (y+h), (x+w-rx), (y+h) ], 
+      [ 'L', (x+rx), (y+h) ],
+      [ 'C', (x+rx-rx*delta), (y+h), x, (y+h-ry+ry*delta), x, (y+h-ry) ],
+      [ 'Z' ]
+    ];
+}
+
+utils.lineToPath = function (line) {
+    return [
+      [ 'M', line.attr("x1"), line.attr("y1") ],
+      [ 'L', line.attr("x2"), line.attr("y2") ] 
+    ];
+}
+
+utils.polygonToPath = function(polygon) {
+  return utils.polylineToPath(polygon);
+}
+
+utils.polylineToPath = function (line) {
+    let points = line.array().value;
+    return [ [ 'M', points[0][0], points[0][1]] ]
+      .concat(
+        points.slice(1).map(p => [ 'L', p[0], p[1] ])
+      );
+}
+
+
+export default utils;

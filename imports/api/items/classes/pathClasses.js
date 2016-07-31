@@ -3,15 +3,18 @@ if(Meteor.isClient) {
   import SVG from 'svgjs';
   import 'svg.draggy.js';
 }
+import normalize from 'normalize-svg-path';
 import Oroboro from '../../namespace';
 import Items from '../items';
 import '../methods';
 
 import { paper } from '../../../utils/BooleanOperations';
-import { getAngle, pointByAngleDistance } from '../../../utils/svgUtils';
+import utils from '../../../utils/svgUtils';
 import { spiroToBezier } from '../../../utils/spiro';
 
 let PathFactory;
+const { getAngle, pointByAngleDistance } = utils;
+//const { getAngle, pointByAngleDistance, circleToCPath, ellipseToCPath, rectToPath, lineToPath, polylineToPath } = utils;
 
 PathFactory = (obj, parent) => {
   if(!Oroboro.classes[obj.type])
@@ -33,6 +36,13 @@ class Item {
   }
 
   static insert(obj, parent) {
+    if(obj.cache && !obj.pointList && !obj.pathArray) {
+      let res = Item.svgToPathArray(obj.cache, parent);
+      //console.log(res)
+      obj.pathArray = res.pathArray;
+      obj.pointList = res.pointList;
+      obj.type = 'CubicPath';
+    }
     obj.pointList = obj.pointList || '[[]]';
     obj.pathArray = obj.pathArray || '[[]]';
     obj._id = Items.methods.insert.call(obj);
@@ -43,6 +53,31 @@ class Item {
 
   static update(obj) {
     Items.methods.update.call(obj);
+  }
+
+  // Transform svg source for 
+  // line, polyline, polygon, rect, circle, ellipse to path
+  static svgToPathArray(source, parent) {
+    let tempG = parent.group().svg(source),
+      temp = tempG.first(),
+      typ = temp.type + 'ToPath',
+      pathArray;
+
+    if(utils[typ])
+      pathArray = utils[typ](temp);
+    else if(temp.type == 'path')
+      pathArray = temp.array().value;
+
+    let tempPath = tempG.path(pathArray),
+      pointList = tempPath.attr('d');
+    pathArray = JSON.stringify(pathArray);
+
+    tempG.remove();
+
+    return {
+      pathArray,
+      pointList
+    };
   }
 }
 
