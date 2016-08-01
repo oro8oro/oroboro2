@@ -8,7 +8,7 @@ let types = [
 
 MenuComponent = React.createClass({
   render() {
-    const { freeOnStart, freeOnStop, changeType, onDelete } = this.props;
+    const { freeOnStart, freeOnStop, changeType, onDelete, onInputChange } = this.props;
     const options = types.map(t => {
       return (<option key={ t } value={ t }>{ t }</option>)
     });
@@ -20,6 +20,7 @@ MenuComponent = React.createClass({
           {options}
         </select>
         <FreePathButton onStart={ freeOnStart } onStop={ freeOnStop }/>
+        <input ref='svgInput' type="text" onKeyPress={(e) => {(e.key === 'Enter' ? onInputChange(this.refs.svgInput.value) : null)}} />
       </div>
     );
   }

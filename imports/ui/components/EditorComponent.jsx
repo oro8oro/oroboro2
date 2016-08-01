@@ -78,8 +78,6 @@ export default EditorComponent = React.createClass({
   },
 
   setNewPath() {
-    console.log('setNewPath')
-    const { item } = this;
     PathFactory({ 
       type: 'SimplePath', closed: true
     }, SVG(this.props.container));
@@ -122,6 +120,15 @@ export default EditorComponent = React.createClass({
     });
   },
 
+  onInputChange(svgSource) {
+    if(!svgSource)
+      return;
+    PathFactory({ 
+      type: 'SimplePath', closed: true,
+      cache: svgSource
+    }, SVG(this.props.container));
+  },
+
   render() {
     //console.log(this.props);
     const { container } = this.props;
@@ -140,6 +147,7 @@ export default EditorComponent = React.createClass({
           freeOnStop={ this.freeOnStop }
           changeType = { this.changeType }
           onDelete = { this.onDelete }
+          onInputChange={ this.onInputChange }
         />
       </div>
     )
