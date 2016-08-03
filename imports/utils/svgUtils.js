@@ -1,5 +1,3 @@
-let utils = {};
-
 /**
  * @summary Get the center and radius of a circle from 3 points.
  * @desc It finds the unique circle determined by three points.
@@ -9,7 +7,7 @@ let utils = {};
  * @param c point object with x and y attributes
  * @return object with center, rv and rh attributes
  */
-utils.circleParams = function(a,b,c) {
+circleParams = function(a,b,c) {
   var d = a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y);
   var center = {
       x: (
@@ -39,7 +37,7 @@ utils.circleParams = function(a,b,c) {
  * @param points array of point objects with x and y attributes
  * @return object with center, rv, rh, rot attributes
  */
-utils.ellipseParams = function(points) {
+ellipseParams = function(points) {
   if(!points || !points.length)
     return;
   var x1 = points[0].x, y1 = points[0].y, 
@@ -153,7 +151,7 @@ var twoPI = 2*Math.PI
  * @param dAngle angle difference
  * @return modified angle value
  */
-utils.turnCW = function(angle, dAngle) {
+turnCW = function(angle, dAngle) {
   angle = angle + dAngle;
   if(angle < 0) angle = twoPI + (angle % twoPI);
   else if(angle > 0) angle = angle % twoPI;
@@ -169,7 +167,7 @@ utils.turnCW = function(angle, dAngle) {
  * @param dAngle angle difference
  * @return modified angle value
  */
-utils.turnCCW = function(angle, dAngle) {
+turnCCW = function(angle, dAngle) {
   return turnCW(angle, -dAngle);
 };
 
@@ -179,13 +177,13 @@ utils.turnCCW = function(angle, dAngle) {
  * @param p2 second point
  * @return distance in pixels
  */
-utils.distance = function(p1,p2) {
+distance = function(p1,p2) {
     if(!p1.x) p1 = {x: p1[0], y: p1[1]}
     if(!p2.x) p2 = {x: p2[0], y: p2[1]}
   return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 }
 
-utils.getAngle = function(center, p1) {
+getAngle = function(center, p1) {
     if(!center.x) center = {x:center[0], y: center[1]}
     if(!p1.x) p1 = {x: p1[0], y: p1[1]}
   var p0 = {
@@ -200,7 +198,7 @@ utils.getAngle = function(center, p1) {
   return 3/2*Math.PI + angle;
 };
 
-utils.pointByAngleDistance = function(center, angle, distance) {
+pointByAngleDistance = function(center, angle, distance) {
     if(!center.x)
         return [
             center[0] + distance * Math.cos(angle),
@@ -219,7 +217,7 @@ utils.pointByAngleDistance = function(center, angle, distance) {
  * @param beta 2nd angle
  * @return smaller difference between 1st & 2nd angle
  */
-utils.angleDiff = function(alpha, beta) {
+angleDiff = function(alpha, beta) {
   var dA = Math.abs((alpha - beta) % twoPI);
   return Math.min(twoPI - dA, dA);
 };
@@ -232,7 +230,7 @@ utils.angleDiff = function(alpha, beta) {
  * @param beta 2nd angle
  * @return CW difference between 1st & 2nd angle
  */
-utils.angleDiffCW = function(alpha, beta) {
+angleDiffCW = function(alpha, beta) {
   if(Math.abs(alpha) >= twoPI) alpha = alpha % twoPI;
   if(Math.abs(beta) >= twoPI) beta = beta % twoPI;
   if(alpha < 0) alpha = alpha + twoPI;
@@ -250,14 +248,14 @@ utils.angleDiffCW = function(alpha, beta) {
  * @param beta 2nd angle
  * @return CCW difference between 1st & 2nd angle
  */
-utils.angleDiffCCW = function(alpha, beta) {
+angleDiffCCW = function(alpha, beta) {
   var diffCW = angleDiffCW(alpha, beta);
   if(diffCW == 0) dA = 0;
   else var dA = twoPI - diffCW;
   return dA;
 };
 
-utils.rotatePoint = function(center, p1, dangle) {
+rotatePoint = function(center, p1, dangle) {
     var a = getAngle(center, p1)
     var dist = distance(center, p1)
     a = turnCW(a, dangle)
@@ -423,11 +421,49 @@ function pathLine(x,y)
   return "M "+x[0]+" "+y[0]+" L "+x[1]+" "+y[1];
 }
 
-utils.circleToPath = function (circle) {
-    return utils.ellipseToPath(circle);
+slope = function(p1, p2) {
+  return (p2[1] - p1[1]) / (p2[0] - p1[0]);
 }
 
-utils.ellipseToPath = function (ellipse) {
+
+linesIntersection = function(l1, l2) {
+  console.log(JSON.stringify(l1))
+  console.log(JSON.stringify(l2))
+
+  let m1 = slope(...l1),
+    m2 = slope(...l2);
+
+  if(!isFinite(m1) && !isFinite(m2))
+    return;
+
+  let b1 = l1[0][1] - m1*l1[0][0],
+    b2 = l2[0][1] - m2*l2[0][0],
+    x, y;
+
+  if(!isFinite(m1)) {
+    y = m2 * l1[0][0] + b2;
+    x = l1[0][0];
+  }
+  else if(!isFinite(m2)) {
+    y = m1 * l2[0][0] + b1;
+    x = l2[0][0];
+  }
+  else {
+    x = (b2 - b1) / (m1 - m2);
+    y = m1 * x + b1;
+  }
+  
+  console.log(m1,b1,m2,b2);
+  console.log([x, y]);
+
+  return [x, y];
+}
+
+circleToPath = function (circle) {
+    return ellipseToPath(circle);
+}
+
+ellipseToPath = function (ellipse) {
     let x = ellipse.x(), 
       y= ellipse.y(),
       rx = parseFloat(ellipse.attr("rx") ? ellipse.attr("rx") : ellipse.attr("r")),
@@ -447,7 +483,7 @@ utils.ellipseToPath = function (ellipse) {
       ];
 }
 
-utils.rectToPath = function (rect) {
+rectToPath = function (rect) {
     let x = rect.x(), 
       y= rect.y(), 
       w = rect.width(), 
@@ -480,18 +516,20 @@ utils.rectToPath = function (rect) {
     ];
 }
 
-utils.lineToPath = function (line) {
+lineToPath = function (line) {
     return [
       [ 'M', line.attr("x1"), line.attr("y1") ],
       [ 'L', line.attr("x2"), line.attr("y2") ] 
     ];
 }
 
-utils.polygonToPath = function(polygon) {
-  return utils.polylineToPath(polygon);
+polygonToPath = function(polygon) {
+  polygon = polylineToPath(polygon);
+  polygon.push([ 'Z' ]);
+  return polygon;
 }
 
-utils.polylineToPath = function (line) {
+polylineToPath = function (line) {
     let points = line.array().value;
     return [ [ 'M', points[0][0], points[0][1]] ]
       .concat(
@@ -499,5 +537,178 @@ utils.polylineToPath = function (line) {
       );
 }
 
+function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursive) {
+        // https://github.com/adobe-webplatform/Snap.svg/blob/master/src/path.js
+        // for more information of where this math came from visit:
+        // http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
+        var PI = Math.PI;
+        var _120 = PI * 90 / 180, //120 initial
+            rad = PI / 180 * (+angle || 0),
+            res = [],
+            xy,
+            rotate = function (x, y, rad) {
+                var X = x * Math.cos(rad) - y * Math.sin(rad),
+                    Y = x * Math.sin(rad) + y * Math.cos(rad);
+                return {x: X, y: Y};
+            };
+        if (!recursive) {
+            xy = rotate(x1, y1, -rad);
+            x1 = xy.x;
+            y1 = xy.y;
+            xy = rotate(x2, y2, -rad);
+            x2 = xy.x;
+            y2 = xy.y;
+            var cos = Math.cos(PI / 180 * angle),
+                sin = Math.sin(PI / 180 * angle),
+                x = (x1 - x2) / 2,
+                y = (y1 - y2) / 2;
+            var h = (x * x) / (rx * rx) + (y * y) / (ry * ry);
+            if (h > 1) {
+                h = Math.sqrt(h);
+                rx = h * rx;
+                ry = h * ry;
+            }
+            var rx2 = rx * rx,
+                ry2 = ry * ry,
+                k = (large_arc_flag == sweep_flag ? -1 : 1) *
+                    Math.sqrt(Math.abs((rx2 * ry2 - rx2 * y * y - ry2 * x * x) / (rx2 * y * y + ry2 * x * x))),
+                cx = k * rx * y / ry + (x1 + x2) / 2,
+                cy = k * -ry * x / rx + (y1 + y2) / 2,
+                f1 = Math.asin(((y1 - cy) / ry).toFixed(9)),
+                f2 = Math.asin(((y2 - cy) / ry).toFixed(9));
 
-export default utils;
+            f1 = x1 < cx ? PI - f1 : f1;
+            f2 = x2 < cx ? PI - f2 : f2;
+            f1 < 0 && (f1 = PI * 2 + f1);
+            f2 < 0 && (f2 = PI * 2 + f2);
+            if (sweep_flag && f1 > f2) {
+                f1 = f1 - PI * 2;
+            }
+            if (!sweep_flag && f2 > f1) {
+                f2 = f2 - PI * 2;
+            }
+        } else {
+            f1 = recursive[0];
+            f2 = recursive[1];
+            cx = recursive[2];
+            cy = recursive[3];
+        }
+        var df = f2 - f1;
+        if (Math.abs(df) > _120) {
+            var f2old = f2,
+                x2old = x2,
+                y2old = y2;
+            f2 = f1 + _120 * (sweep_flag && f2 > f1 ? 1 : -1);
+            x2 = cx + rx * Math.cos(f2);
+            y2 = cy + ry * Math.sin(f2);
+            res = a2c(x2, y2, rx, ry, angle, 0, sweep_flag, x2old, y2old, [f2, f2old, cx, cy]);
+        }
+        df = f2 - f1;
+        var c1 = Math.cos(f1),
+            s1 = Math.sin(f1),
+            c2 = Math.cos(f2),
+            s2 = Math.sin(f2),
+            t = Math.tan(df / 4),
+            hx = 4 / 3 * rx * t,
+            hy = 4 / 3 * ry * t,
+            m1 = [x1, y1],
+            m2 = [x1 + hx * s1, y1 - hy * c1],
+            m3 = [x2 + hx * s2, y2 - hy * c2],
+            m4 = [x2, y2];
+        m2[0] = 2 * m1[0] - m2[0];
+        m2[1] = 2 * m1[1] - m2[1];
+        if (recursive) {
+            return [m2, m3, m4].concat(res);
+        } else {
+            res = [m2, m3, m4].concat(res).join().split(",");
+            var newres = [];
+            for (var i = 0, ii = res.length; i < ii; i++) {
+                newres[i] = i % 2 ? rotate(res[i - 1], res[i], rad).y : rotate(res[i], res[i + 1], rad).x;
+            }
+            return newres;
+        }
+    }
+
+//simplify complex paths with H and V, S, Q, T, A
+normalize = function(svgArr) {
+  for(var a = 0; a < svgArr.length; a++){
+      if(svgArr[a][0] == "H"){
+          svgArr[a][0] = "L";
+          if(svgArr[a-1][0] == 'C')
+              svgArr[a][2] = svgArr[a-1][6];
+          else
+              svgArr[a][2] = svgArr[a-1][2];
+      }
+      else if(svgArr[a][0] == "V"){
+          svgArr[a][0] = "L";
+          svgArr[a][2] = svgArr[a][1];
+          if(svgArr[a-1][0] == 'C')
+              svgArr[a][1] = svgArr[a-1][5];
+          else
+              svgArr[a][1] = svgArr[a-1][1];
+      }
+      else if(svgArr[a][0] == "S"){
+          svgArr[a][0] = 'C';
+          svgArr[a][5] = svgArr[a][3];
+          svgArr[a][6] = svgArr[a][4];
+          if(svgArr[a-1][0] != 'M'){
+              svgArr[a][3] = svgArr[a][1];
+              svgArr[a][4] = svgArr[a][2];
+              svgArr[a][1] = svgArr[a-1][5] + svgArr[a-1][5] - svgArr[a-1][3];
+              svgArr[a][2] = svgArr[a-1][6] + svgArr[a-1][6] - svgArr[a-1][4];
+          }
+          else{
+              svgArr[a][3] = svgArr[a-1][1];
+              svgArr[a][4] = svgArr[a-1][2];
+              svgArr[a][1] = svgArr[a-1][1];
+              svgArr[a][2] = svgArr[a-1][2];
+          }
+      }
+      else if(svgArr[a][0] == "Q"){
+          svgArr[a][0] = 'C';
+          svgArr[a][5] = svgArr[a][3];
+          svgArr[a][6] = svgArr[a][4];
+          svgArr[a][3] = svgArr[a][1] * 2/3 + svgArr[a][5] * 1/3;
+          svgArr[a][4] = svgArr[a][2] * 2/3 + svgArr[a][6] * 1/3;
+          svgArr[a][1] = svgArr[a][1] * 2/3 + svgArr[a-1][svgArr[a-1].length-2] * 1/3;
+          svgArr[a][2] = svgArr[a][2] * 2/3 + svgArr[a-1][svgArr[a-1].length-1] * 1/3;
+      }
+      else if(svgArr[a][0] == "T"){
+          svgArr[a][0] = 'C';
+          svgArr[a][5] = svgArr[a][1];
+          svgArr[a][6] = svgArr[a][2];
+          if(svgArr[a-1][0] != 'M'){
+              svgArr[a][1] = svgArr[a-1][5] + svgArr[a-1][5] - svgArr[a-1][3];
+              svgArr[a][2] = svgArr[a-1][6] + svgArr[a-1][6] - svgArr[a-1][4];
+              svgArr[a][3] = svgArr[a][5] * 1/3 + svgArr[a][1] - svgArr[a-1][5] / 3;
+              svgArr[a][4] = svgArr[a][6] * 1/3 + svgArr[a][2] - svgArr[a-1][6] / 3;
+          }
+          else{
+              svgArr[a][1] = svgArr[a-1][1]
+              svgArr[a][2] = svgArr[a-1][2]
+              svgArr[a][3] = svgArr[a-1][1]
+              svgArr[a][4] = svgArr[a-1][2]
+          } 
+      }
+      else if(svgArr[a][0] == "A"){
+          var x = svgArr[a-1][svgArr[a-1].length-2],
+              y = svgArr[a-1][svgArr[a-1].length-1];
+          var temp = a2c.apply(0, [x, y].concat(svgArr[a].slice(1)));
+          svgArr.splice(a,1);
+          for(var i = 0; i < temp.length; i = i + 6)
+              svgArr.splice(a + (Math.floor(i/6)), 0, ['C', temp[i], temp[i+1], temp[i+2], temp[i+3], temp[i+4], temp[i+5] ]);
+      }
+  }
+  return svgArr;
+}
+
+
+export { 
+  circleParams, ellipseParams, 
+  turnCW, turnCCW, pointByAngleDistance, getAngle,
+  distance, angleDiff, angleDiffCW, angleDiffCCW, rotatePoint,
+  circleToPath, ellipseToPath, rectToPath, lineToPath, polylineToPath, polygonToPath,
+  normalize,
+  linesIntersection
+};
+
