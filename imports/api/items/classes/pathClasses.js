@@ -3,18 +3,21 @@ if(Meteor.isClient) {
   import SVG from 'svgjs';
   import 'svg.draggy.js';
 }
-import normalize from 'normalize-svg-path';
+//import normalize from 'normalize-svg-path';
+import absolutize from 'abs-svg-path';
+import Bezier from 'bezier-js';
 import Oroboro from '../../namespace';
 import Items from '../items';
 import '../methods';
 
 import { paper } from '../../../utils/BooleanOperations';
-import utils from '../../../utils/svgUtils';
+import * as utils from '../../../utils/svgUtils';
 import { spiroToBezier } from '../../../utils/spiro';
-
+console.log('unite, subtract, exclude, intersect, divide')
 let PathFactory;
-const { getAngle, pointByAngleDistance } = utils;
-//const { getAngle, pointByAngleDistance, circleToCPath, ellipseToCPath, rectToPath, lineToPath, polylineToPath } = utils;
+const { getAngle, pointByAngleDistance, turnCW, turnCCW, normalize } = utils;
+
+Oroboro.Bezier = Bezier;
 
 PathFactory = (obj, parent) => {
   if(!Oroboro.classes[obj.type])
@@ -41,8 +44,15 @@ class Item {
       //console.log(res)
       obj.pathArray = res.pathArray;
       obj.pointList = res.pointList;
+      obj.cache = res.cache;
+      obj.closed = res.closed;
       obj.type = 'CubicPath';
     }
+
+    // Be sure we have a valid path
+    if(!Item.validate(typeof obj.pathArray == 'string' ? JSON.parse(obj.pathArray) : obj.pathArray))
+      return;
+
     obj.pointList = obj.pointList || '[[]]';
     obj.pathArray = obj.pathArray || '[[]]';
     obj._id = Items.methods.insert.call(obj);
@@ -65,19 +75,40 @@ class Item {
 
     if(utils[typ])
       pathArray = utils[typ](temp);
-    else if(temp.type == 'path')
-      pathArray = temp.array().value;
+    else if(temp.type == 'path') {
+      pathArray = normalize(absolutize(temp.array().value));
+    }
 
     let tempPath = tempG.path(pathArray),
-      pointList = tempPath.attr('d');
+      pointList = tempPath.attr('d'),
+      cache = tempPath.svg(),
+      closed = pathArray[pathArray.length-1][0] == 'Z';
     pathArray = JSON.stringify(pathArray);
 
     tempG.remove();
 
     return {
       pathArray,
-      pointList
+      pointList,
+      cache,
+      closed
     };
+  }
+
+  static validate(pathArray) {
+    let notvalid = pathArray.some(p => {
+      return p.slice(1).some(po => {
+        // Has to be number - we exclude null, undefined
+        // NaN is 'number'
+        if(!po || (typeof po != 'number'))
+          return true;
+        // We exclude large numbers, including Infinity
+        if(po > Number.MAX_SAFE_INTEGER || po < Number.MIN_SAFE_INTEGER)
+          return true;
+        return false;
+      });
+    });
+    return !notvalid;
   }
 }
 
@@ -101,12 +132,15 @@ class Path extends Item {
   }
 
   draw(parent) {
+    //console.log(this._id)
     if(parent)
       this._parent = parent;
     if(!this._svg) {
       this._svg = this.getElement(parent).path(this.getCubic())
         .attr('id', this._id)
         .opacity(0.6)
+        .stroke({color: '#000', width:1})
+        .fill('#BCBEC0')
         .draggy();
     }
     return this;
@@ -150,8 +184,21 @@ class CubicPath extends Path {
     this._pathArray = JSON.parse(pathArray);
   }
 
-  move() {
+  draw(parent) {
+    super.draw(parent);
+    this.setListeners();
+    return this;
+  }
 
+  setListeners() {
+    let self = this;
+    this._svg.on('dragend', function(e) {
+      self.spotUpdate();
+      self.update();
+    });
+  }
+
+  move() {
     return this;
   }
 
@@ -168,6 +215,11 @@ class CubicPath extends Path {
     return clone;*/
   }
 
+  spotUpdate() {
+    this._pathArray = this._svg.array().value;
+    this._pointList = this._svg.attr('d');
+  }
+
   update() {
     //console.log(JSON.stringify(this._pathArray));
     this._svg.plot(this._pathArray);
@@ -179,57 +231,61 @@ class CubicPath extends Path {
     Item.update({ 
       id: this._id,
       modifier: {
-        pointList: JSON.stringify(this._pointList),
+        pointList: typeof this._pointList == 'string' ? this._pointList : JSON.stringify(this._pointList),
         pathArray: JSON.stringify(this._pathArray),
         cache: this._cache,
       }
     });
   }
 
+  setItemFromPath(d) {
+    let p = this._svg.parent().path(d);
+    let item = Item.insert({
+      type: 'CubicPath', closed: true,
+      pointList: p.attr('d'),
+      pathArray: JSON.stringify(p.array().value),
+    }, this._svg.parent());
+    p.remove();
+    return item;
+  }
+
   boolean(path2, type) {
-    setItem = (d) => {
-      let p = this._svg.parent().path(d);
-      let item = Item.insert({
-        type: 'CubicPath', closed: true,
-        pointList: p.attr('d'),
-        pathArray: JSON.stringify(p.array().value),
-      }, this._svg.parent());
-      p.remove();
-      return item;
-    };
     // TODO: If we receive path2 by id - temporary
     if(typeof path2 == 'string')
       path2 = Oroboro.find(path2);
 
     // Use Paper.js boolean ops
     paper.setup();
-    let path1 = new paper.Path(this._svg.attr('d'));
-    let boolres = path1[type](new paper.Path(path2._svg.attr('d')));
+    let d1 = this._svg.attr('d'),
+      d2 = path2._svg.attr('d'),
+      path1 = new paper.Path(d1),
+      boolres = path1[type](new paper.Path(d2));
+
     if(type != 'divide') {
-      return setItem(boolres.exportSVG())
+      return this.setItemFromPath(boolres.exportSVG())
     };
     return boolres._children.map((r, i) => {
-      return setItem(r.exportSVG());
+      return this.setItemFromPath(r.exportSVG());
     });
   }
 
-  unite(path2) {
+  or(path2) {
     return this.boolean(path2, 'unite');
   }
 
-  subtract(path2) {
+  xor(path2) {
     return this.boolean(path2, 'subtract');
   }
 
-  exclude(path2) {
+  diff(path2) {
     return this.boolean(path2, 'exclude');
   }
 
-  intersect(path2) {
+  and(path2) {
     return this.boolean(path2, 'intersect');
   }
 
-  divide(path2) {
+  div(path2) {
     return this.boolean(path2, 'divide');
   }
 };
@@ -273,6 +329,11 @@ class SimplePath extends CubicPath {
         parameters: { transform: this._transform },
       }
     });
+  }
+
+  spotUpdate() {
+    self._pathArray = this._svg.array().value;
+    self._pointList = this.getPointList();
   }
 
   move(dx=0, dy=0) {

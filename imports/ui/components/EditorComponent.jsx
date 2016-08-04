@@ -30,18 +30,24 @@ export default EditorComponent = React.createClass({
 
   createSVG(items, container) {
     this.removeSVG();
-    this.items = items.map(i => {
+    this.items = [];
+    
+    items.forEach(i => {
       if(Oroboro.waitOn[i._id]) {
         let obj = Oroboro.waitOn[i._id];
         delete Oroboro.waitOn[i._id];
-        //console.log(obj);
-        return obj;
       }
-      else
-        return PathFactory(i).draw(container);
+      else {
+        obj = PathFactory(i).draw(container);
+        if(!obj) {
+          console.log('not inserted');
+          return;
+        }
+      }
+      this.items.push(obj);
     });
     let self = this;
-    this.items.forEach(i => {
+    this.items.forEach((i, k) => {
       i._svg.on('click', function(e) {
         self.setClipboard(this.attr('id'));
       });
