@@ -31,16 +31,16 @@ export default EditorComponent = React.createClass({
   createSVG(items, container) {
     this.removeSVG();
     this.items = [];
-    
     items.forEach(i => {
+      let obj;
       if(Oroboro.waitOn[i._id]) {
-        let obj = Oroboro.waitOn[i._id];
+        obj = Oroboro.waitOn[i._id];
         delete Oroboro.waitOn[i._id];
       }
       else {
         obj = PathFactory(i).draw(container);
         if(!obj) {
-          console.log('not inserted');
+          console.log('element not inserted');
           return;
         }
       }
@@ -51,7 +51,7 @@ export default EditorComponent = React.createClass({
       i._svg.on('click', function(e) {
         self.setClipboard(this.attr('id'));
       });
-    })
+    });
     Oroboro.elem = this.items;
   },
 
