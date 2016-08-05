@@ -29,7 +29,8 @@ react-meteor-data       # Meteor data integration for React
 
 apollo
 
-# practicalmeteor:mocha
+practicalmeteor:mocha
+
 # tmeasday:check-npm-versions
 # reywood:publish-composite
 # reactive-dict
