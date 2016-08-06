@@ -13,7 +13,7 @@ import '../methods';
 import { paper } from '../../../utils/BooleanOperations';
 import * as utils from '../../../utils/svgUtils';
 import { spiroToBezier } from '../../../utils/spiro';
-console.log('unite, subtract, exclude, intersect, divide')
+
 let PathFactory;
 const { getAngle, pointByAngleDistance, turnCW, turnCCW, normalize } = utils;
 
@@ -251,17 +251,22 @@ class CubicPath extends Path {
     return item;
   }
 
-  boolean(path2, type) {
+  booleanWrap(path2, type) {
     // TODO: If we receive path2 by id - temporary
     if(typeof path2 == 'string')
       path2 = Oroboro.find(path2);
 
+    return this.boolean(this._svg.attr('d'), path2._svg.attr('d'), type);
+  }
+
+  boolean(d1, d2, type) {
     // Use Paper.js boolean ops
     paper.setup();
-    let d1 = this._svg.attr('d'),
-      d2 = path2._svg.attr('d'),
-      path1 = new paper.Path(d1),
-      boolres = path1[type](new paper.Path(d2));
+
+    //path1 = new paper.Path(d1),
+    //  boolres = path1[type](new paper.Path(d2));
+    path1 = new paper.CompoundPath(d1),
+      boolres = path1[type](new paper.CompoundPath(d2));
 
     if(type != 'divide') {
       return this.setItemFromPath(boolres.exportSVG())
@@ -272,23 +277,23 @@ class CubicPath extends Path {
   }
 
   or(path2) {
-    return this.boolean(path2, 'unite');
+    return this.booleanWrap(path2, 'unite');
   }
 
   xor(path2) {
-    return this.boolean(path2, 'subtract');
+    return this.booleanWrap(path2, 'exclude');
   }
 
   diff(path2) {
-    return this.boolean(path2, 'exclude');
+    return this.booleanWrap(path2, 'subtract');
   }
 
   and(path2) {
-    return this.boolean(path2, 'intersect');
+    return this.booleanWrap(path2, 'intersect');
   }
 
   div(path2) {
-    return this.boolean(path2, 'divide');
+    return this.booleanWrap(path2, 'divide');
   }
 
   offsetLine(p1, p2, d) {
@@ -304,8 +309,6 @@ class CubicPath extends Path {
   linejoin(seg1, seg2, type = 'bevel', inner = true) {
     // miter, round, bevel
     if(inner || type == 'mitter') {
-      console.log(JSON.stringify(seg1))
-      console.log(JSON.stringify(seg2))
       let p = utils.linesIntersection(
         [ seg1[0].slice(1,3), seg1[1].slice(1,3) ], 
         [ seg2[0].slice(1,3), seg2[1].slice(1,3) ]
@@ -319,15 +322,67 @@ class CubicPath extends Path {
     // butt, round, square
   }
 
-  offset(d1, d2, type) {
-    const { _pathArray, _closed} = this;
+  strokeToPath(d, type) {
+    if(!d)
+      d = parseFloat(this._svg.attr('stroke-width'));
+    let path1, path2, d1 = [], d2 = [];
+
+    this.separate(this._pathArray)
+      .forEach(subPathArray => {
+        d1 = d1.concat(this.offsetPath(subPathArray, d, type));
+        d2 = d2.concat(this.offsetPath(subPathArray, -d, type));
+      });
+
+    path1 = this._svg.parent().path(d1);
+    path2 = this._svg.parent().path(d2);
+    d1 = path1.attr('d');
+    d2 = path2.attr('d');
+
+    path1.remove();
+    path2.remove();
+    return this.boolean(d1, d2, 'exclude');
+  }
+
+  offset(d1, type) {
+    let subP = [];
+    this.separate(this._pathArray)
+      .forEach(subPathArray => {
+        subP = subP.concat(this.offsetPath(subPathArray, d1, type));
+      });
+    return this.setItemFromPath(subP);
+  }
+
+  // Returns the subPathArrays
+  separate(pathArray) {
+    let subpaths = [], i=-1;
+    pathArray.forEach(p => {
+      if(p[0] == 'M') {
+        subpaths.push([]);
+        i++;
+      }
+      subpaths[i].push(p);
+    });
+    return subpaths;
+  }
+
+  trimDec(no, dec=3) {
+    return parseFloat(no.toFixed(dec));
+  }
+
+  offsetPath(_pathArray, d1, type) {
+    const { trimDec } = this;
+    //console.log(JSON.stringify(_pathArray));
     let pp = Object.assign([], _pathArray),
       path = [],
       lenP = pp.length,
-      curve, len, seg, prev, j;
+      inner = d1 < 0,
+      curve, seg, prev, j,
+      _closed;
 
-    if(pp[lenP-1][0] == 'Z')
+    if(pp[lenP-1][0] == 'Z') {
       pp.pop();
+      _closed = true;
+    }
 
     let last = pp[lenP-1];
 
@@ -341,75 +396,64 @@ class CubicPath extends Path {
         _pathArray[lenP-2][_pathArray[lenP-2].length-1] != _pathArray[0][2]
       )
     ) {
-      console.log('add point')
       pp.push(['L', pp[0][1], pp[0][2]]);
     }
-
-    console.log(JSON.stringify(pp));
 
     pp.forEach((p,i) => {
       if(p[0] == 'M' || p[0] == 'Z')
         return;
-      //console.log('i: ' + i);
-      len = pp[i-1].length;
 
       if(p[0] == 'L') {
-        console.log('L algorithm')
+        let len = pp[i-1].length,
+          prev = [ pp[i-1][len-2], pp[i-1][len-1]];
+
         // Make sure we don't calculate offset perpendiculars on lines 
         // determined by two points with same coordinates;
-        // so we find the nearest one with different coords
-        j = i;
-        prev = [ pp[j-1][len-2], pp[j-1][len-1] ];
-        while(prev[0] == p[1] && prev[1] == p[2] && j > 0) {
-          j --;
-          prev = [ pp[j-1][len-2], pp[j-1][len-1] ];
-        }
-        //console.log('j: ' + j);
-
+        if(trimDec(prev[0]) == trimDec(p[1]) && trimDec(prev[1]) == trimDec(p[2]))
+          return;
 
         seg = this.offsetLine(
-          [ pp[i-1][len-2], pp[i-1][len-1]],
+          prev,
           [ p[1], p[2] ],
           d1);
       }
       else {
+        let len = pp[i-1].length;
         curve = new Bezier(
           pp[i-1][len-2], pp[i-1][len-1], 
           ...p.slice(1)
         );
         seg = []
-        curve.reduce().forEach((curv, k) => {
-          curv.offset(d1).forEach((c, j) => {
-            let p = this.BezierToPathArray(c);
-            if(i == 1 && k == 0 && j == 0)
-              seg = seg.concat(p);
-            else
-              seg.push(p[1]);
+        curve.reduce().forEach((curvv, k) => {
+          curvv.reduce().forEach((curv, k) => {
+            curv.offset(d1).forEach((c, j) => {
+              let p = this.BezierToPathArray(c);
+              if(i == 1 && k == 0 && j == 0)
+                seg = seg.concat(p);
+              else
+                seg.push(p[1]);
+            });
           });
         });
       }
 
-      //console.log('seg: ' + JSON.stringify(seg));
-
       // Hook for linejoin
       if(path.length > 1 && seg.length && seg[0][0] == 'L' && path[path.length-1][0] == 'L') {
-        console.log('seg linejoin')
+        //console.log('seg linejoin')
         seg = this.linejoin(
           seg, 
           path.slice(path.length-2), 
-          type, d1 > 0);
+          type, inner);
         path.splice(path.length-2);
       }
-
-      //console.log('seg: ' + JSON.stringify(seg));
       
       path = path.concat(seg);
 
-      console.log('path: ', path.length, JSON.stringify(path))
+      //console.log('path: ', path.length, JSON.stringify(path))
     });
     //console.log(path[path.length-1][0])
     if(path.length > 1 && path[path.length-1][0] == 'L' && path[path.length-1][0] == 'L' && path[1][0] == 'L') {
-      console.log('end')
+      //console.log('end')
       seg = this.linejoin(
         [ 
           path[0], 
@@ -419,7 +463,7 @@ class CubicPath extends Path {
           path[path.length-2], 
           path[path.length-1]
         ],
-        type, d1 > 0);
+        type, inner);
 
       path.pop();
       path.splice(0,1, ...seg.slice(1, seg.length-1));
@@ -431,9 +475,9 @@ class CubicPath extends Path {
     if(_closed)
       path.push(['Z']);
 
-    console.log(JSON.stringify(path))
+    //console.log(JSON.stringify(path))
 
-    this.setItemFromPath(path);
+    return path;
 
   }
 
