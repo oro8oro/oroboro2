@@ -21,7 +21,7 @@
     "react-router": "^2.6.0",
     "request-promise": "^3.0.0",
     "svg.draggy.js": "^1.1.1",
-    "svgjs": "^2.2.5"
+    "svg.js": "^2.3.2"
   },
   "devDependencies": {
     "eslint": "^3.0.1",

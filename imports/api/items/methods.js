@@ -10,7 +10,7 @@ const itemsInsert = new ValidatedMethod({
   run(obj) {
     delete obj._id;
     let id = Items.insert(obj);
-    console.log('inserted: ' + id);
+    //console.log('inserted: ' + id);
     return id;
   }
 });
@@ -19,7 +19,7 @@ const itemsUpdate = new ValidatedMethod({
   name: 'items.update',
   validate: null,
   run({ id, modifier }) {
-    console.log('updated: ' + id)
+    //console.log('updated: ' + id)
     //console.log(modifier)
     Items.update({_id: id}, {$set: modifier});
   }
@@ -29,7 +29,7 @@ const itemsDelete = new ValidatedMethod({
   name: 'items.delete',
   validate: null,
   run(id) {
-    console.log('delete: ' + id)
+    //console.log('delete: ' + id)
     Items.remove(id);
   }
 });

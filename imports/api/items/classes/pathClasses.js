@@ -1,116 +1,22 @@
-// Path classes
+import Oroboro from '../../namespace';
+import '../methods';
+import Item from './Item';
+
 if(Meteor.isClient) {
-  import SVG from 'svgjs';
+  import SVG from 'svg.js';
   import 'svg.draggy.js';
 }
-
 import absolutize from 'abs-svg-path';
 import Bezier from 'bezier-js';
-import Oroboro from '../../namespace';
-import Items from '../items';
-import '../methods';
 
 import { paper } from '../../../utils/BooleanOperations';
 import * as utils from '../../../utils/svgUtils';
 import { spiroToBezier } from '../../../utils/spiro';
 
-let PathFactory;
 const { getAngle, pointByAngleDistance, turnCW, turnCCW, normalize } = utils;
 
 Oroboro.Bezier = Bezier;
 
-PathFactory = (obj, parent) => {
-  if(!Oroboro.classes[obj.type])
-    throw new Oroboro.Error('undefined-class', `There is no <${obj.type}> class.`);
-  if(obj._id)
-    return new Oroboro.classes[obj.type](obj);
-  return Item.insert(obj, parent);
-};
-
-class Item {
-  constructor() {
-    this._chain = []; //[[funcname, [params]], ]
-  }
-
-  getElement(el) {
-    if(typeof el == 'string')
-      return SVG.get(el) || SVG(el);
-    return el;
-  }
-
-  static insert(obj, parent) {
-    if(obj.cache && !obj.pointList && !obj.pathArray) {
-      let res = Item.svgToPathArray(obj.cache, parent);
-      //console.log(res)
-      obj.pathArray = res.pathArray;
-      obj.pointList = res.pointList;
-      obj.cache = res.cache;
-      obj.closed = res.closed;
-      obj.type = 'CubicPath';
-    }
-
-    // Be sure we have a valid path
-    if(!Item.validate(typeof obj.pathArray == 'string' ? JSON.parse(obj.pathArray) : obj.pathArray))
-      return;
-
-    obj.pointList = obj.pointList || '[[]]';
-    obj.pathArray = obj.pathArray || '[[]]';
-    obj._id = Items.methods.insert.call(obj);
-    let item = PathFactory(obj).draw(parent);
-    Oroboro.waitOn[obj._id] = item;
-    return item;
-  }
-
-  static update(obj) {
-    Items.methods.update.call(obj);
-  }
-
-  // Transform svg source for 
-  // line, polyline, polygon, rect, circle, ellipse to path
-  static svgToPathArray(source, parent) {
-    let tempG = parent.group().svg(source),
-      temp = tempG.first(),
-      typ = temp.type + 'ToPath',
-      pathArray;
-
-    if(utils[typ])
-      pathArray = utils[typ](temp);
-    else if(temp.type == 'path') {
-      pathArray = normalize(absolutize(temp.array().value));
-    }
-
-    let tempPath = tempG.path(pathArray),
-      pointList = tempPath.attr('d'),
-      cache = tempPath.svg(),
-      closed = pathArray[pathArray.length-1][0] == 'Z';
-    pathArray = JSON.stringify(pathArray);
-
-    tempG.remove();
-
-    return {
-      pathArray,
-      pointList,
-      cache,
-      closed
-    };
-  }
-
-  static validate(pathArray) {
-    let notvalid = pathArray.some(p => {
-      return p.slice(1).some(po => {
-        // Has to be number - we exclude null, undefined
-        // NaN is 'number'
-        if(!po || (typeof po != 'number'))
-          return true;
-        // We exclude large numbers, including Infinity
-        if(po > Number.MAX_SAFE_INTEGER || po < Number.MIN_SAFE_INTEGER)
-          return true;
-        return false;
-      });
-    });
-    return !notvalid;
-  }
-}
 
 class Path extends Item {
   // pathList -> cache (svg code)
@@ -124,7 +30,7 @@ class Path extends Item {
     this._selected = selected;
     this._locked = locked;
     this._svg = null;
-    this._cache = [];
+    this._cache = '';
   }
 
   get svg() {
@@ -132,11 +38,10 @@ class Path extends Item {
   }
 
   draw(parent) {
-    //console.log(this._id)
     if(parent)
       this._parent = parent;
     if(!this._svg) {
-      this._svg = this.getElement(parent).path(this.getCubic())
+      this._svg = this.getSvg(parent).path(this.getCubic())
         .attr('id', this._id)
         .opacity(0.6)
         .stroke({color: '#000', width:1})
@@ -148,9 +53,9 @@ class Path extends Item {
 
 
 
-  delete() {
+  remove() {
     this._svg.remove();
-    Meteor.call('items.delete', this._id);
+    Item.remove(this._id);
   }
 
   getCubic() {
@@ -193,11 +98,27 @@ class CubicPath extends Path {
   }
 
   setListeners() {
-    let self = this;
-    this._svg.on('dragend', function(e) {
-      self.spotUpdate();
-      self.update();
+    let self = this, ini;
+    this._svg.on('dragstart', function(e) {
+      ini = JSON.parse(JSON.stringify(this.array().value));
+      self.callListeners('dragstart', e, this, self);
     });
+    this._svg.on('dragend', function(e) {
+      setChron(JSON.parse(JSON.stringify(ini)));
+      ini = null;
+      self.callListeners('dragend', e, this, self);
+    });
+
+    function setChron(pathArray) {
+      self.chronology(
+        function() {
+          self.spotUpdate();
+        },
+        function() {
+          self.spotUpdate(pathArray);
+        });
+      return;
+    }
   }
 
   move() {
@@ -210,20 +131,19 @@ class CubicPath extends Path {
     let obj = Object.assign({}, this._doc);
     obj.original = this._id;
     return Item.insert(obj, this._parent);
-    
-    /*obj._id = Items.methods.insert.call(obj);
-    let clone = PathFactory(obj).draw(this._parent);
-    Oroboro.waitOn[obj._id] = clone;
-    return clone;*/
   }
 
-  spotUpdate() {
-    this._pathArray = this._svg.array().value;
-    this._pointList = this._svg.attr('d');
+  spotUpdate(pathArray) {
+    this._pathArray = pathArray || this._svg.array().value;
+    this._pointList = this.getPointList();
+    this.update();
+  }
+
+  getPointList() {
+    return this._svg.attr('d');
   }
 
   update() {
-    //console.log(JSON.stringify(this._pathArray));
     this._svg.plot(this._pathArray);
     this._cache = this._svg.node.outerHTML;
     this.updateDoc();
@@ -363,10 +283,6 @@ class CubicPath extends Path {
       subpaths[i].push(p);
     });
     return subpaths;
-  }
-
-  trimDec(no, dec=3) {
-    return parseFloat(no.toFixed(dec));
   }
 
   offsetPath(_pathArray, d1, type) {
@@ -539,11 +455,6 @@ class SimplePath extends CubicPath {
     });
   }
 
-  spotUpdate() {
-    self._pathArray = this._svg.array().value;
-    self._pointList = this.getPointList();
-  }
-
   move(dx=0, dy=0) {
     this._pointList = this._pointList.map(subpath => {
       return subpath.map(p => [p[0] + dx, p[1] + dy]);
@@ -691,10 +602,10 @@ class SimplePath extends CubicPath {
 };
 
 
-export { PathFactory, Item, Path, CubicPath, SimplePath };
+export { Path, CubicPath, SimplePath };
 
 // Add to Oroboro namespace, so we can access them in window
-let exp = { PathFactory, Item, Path, CubicPath, SimplePath }
+let exp = { Path, CubicPath, SimplePath }
 Oroboro.classes = Object.assign(Oroboro.classes, exp);
 
 Oroboro.find = (id) => {

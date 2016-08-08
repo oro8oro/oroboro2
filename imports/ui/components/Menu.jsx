@@ -6,7 +6,7 @@ let types = [
   'algo1',
 ];
 
-MenuComponent = React.createClass({
+const Menu = React.createClass({
   render() {
     const { freeOnStart, freeOnStop, changeType, onDelete, onInputChange } = this.props;
     const options = types.map(t => {
@@ -57,4 +57,4 @@ ToggleButton = React.createClass({
   }
 });
 
-export default MenuComponent;
+export default Menu;
