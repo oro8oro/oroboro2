@@ -15,19 +15,24 @@ standard-minifier-js    # JS minifier run for production mode
 es5-shim                # ECMAScript 5 compatibility for older browsers.
 ecmascript              # Enable ECMAScript2015+ syntax in app code
 
+blaze-html-templates
+
+reactive-var
+
+check
+
 mdg:validated-method    # Wrapper package for methods
 aldeed:collection2
 kuip:schema-graphql-bridge
 dburles:collection-helpers
 
+kadira:flow-router
+kadira:blaze-layout
+meteorhacks:picker
+
 accounts-base
 
-static-html
-
-
-react-meteor-data       # Meteor data integration for React
-
-apollo
+# apollo
 
 practicalmeteor:mocha
 
