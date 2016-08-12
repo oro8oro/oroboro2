@@ -5,8 +5,9 @@ class Path extends Item {
   constructor(doc) {
     super(doc);
     this._doc = doc;
-    let { _id, closed=true, palette, selected, locked } = doc;
+    let { _id, closed=true, pathArray, palette, selected, locked } = doc;
     this._id = _id;
+    this._pathArray = JSON.parse(pathArray || '[]');
     this._closed = closed;
     this._palette = palette;
     this._selected = selected;

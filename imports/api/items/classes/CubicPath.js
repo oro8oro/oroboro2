@@ -1,3 +1,5 @@
+import absolutize from 'abs-svg-path';
+
 import Oroboro from '../../namespace';
 import Bezier from 'bezier-js';
 import Item from './Item';
@@ -15,9 +17,22 @@ Oroboro.Bezier = Bezier;
 class CubicPath extends Path {
   constructor(doc) {
     super(doc);
-    let { pathArray } = doc;
-    this._pointList = doc.pointList;
-    this._pathArray = JSON.parse(pathArray);
+  }
+
+  normalize(_pathArray) {
+    if(_pathArray)
+      return normalize(_pathArray);
+    
+    this._pathArray = normalize(this._pathArray);
+    return this;
+  }
+
+  absolutize(_pathArray) {
+    if(_pathArray)
+      return absolutize(_pathArray);
+    
+    this._pathArray = absolutize(this._pathArray);
+    return this;
   }
 
   draw(parent, multi) {
@@ -81,7 +96,6 @@ class CubicPath extends Path {
     let p = this._svg.parent().path(d);
     let item = Item.insert({
       type: 'CubicPath', closed: true,
-      pointList: p.attr('d'),
       pathArray: JSON.stringify(p.array().value),
     }, this._svg.parent());
     p.remove();

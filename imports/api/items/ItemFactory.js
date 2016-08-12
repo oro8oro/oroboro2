@@ -1,7 +1,6 @@
 import Oroboro from '../namespace';
 import Item from './classes/Item';
-import './classes/CubicPath';
-import './classes/SimplePath';
+import './ItemClasses';
 
 const ItemFactory = (obj, parent) => {
   if(!Oroboro.classes[obj.type])
