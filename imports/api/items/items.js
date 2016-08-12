@@ -176,12 +176,27 @@ Items.schema = new SimpleSchema({
   },
   pathArray: {
     type: String,
-    optional: true
+    optional: true,
   },
   cache: {
     type: String,
     label: 'Cache',
-    optional: true
+    optional: true,
+  },
+  mem: {
+    type: Object,
+    label: "Memory",
+    optional: true,
+  },
+  'mem.chain': {
+    type: String,
+    label: "Memory Chain",
+    defaultValue: '[]',
+  },
+  'mem.index': {
+    type: Number,
+    label: 'Memory Index',
+    defaultValue: -1,
   }
 });
 Items.attachSchema(Items.schema);

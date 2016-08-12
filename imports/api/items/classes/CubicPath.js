@@ -25,6 +25,37 @@ class CubicPath extends Path {
     this.setListeners();
     return this;
   }
+
+  setListeners() {
+    let self = this, xi, yi;
+    this._svg.on('dragstart', function(e) {
+      let { x, y } = this.bbox();
+      xi = self.trimDec(x, 3);
+      yi = self.trimDec(y, 3);
+      self.callListeners('dragstart', e, this, self);
+    });
+    this._svg.on('dragend', function(e) {
+      let {x, y} = this.bbox();
+      // Do not run on click
+      if(self.trimDec(x, 3) == xi && self.trimDec(y, 3) == yi)
+        return;
+
+      self.callListeners('dragend', e, this, self);
+      self.mem({ name: 'moveR', up: [ x, y ], down: [ xi, yi ] });
+    });
+  }
+
+  moveR(x, y) {
+    this._svg.move(x, y);
+    this._pathArray = this._svg.array().value;
+  }
+
+  dmoveR(x, y) {
+    this._svg.dmove(x, y);
+    this._pathArray = this._svg.array().value;
+  }
+
+
   clone() {
     // insert in db
     let obj = Object.assign({}, this._doc);
