@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "abs-svg-path": "^0.1.1",
+    "opentype.js": "^0.6.4",
     "parse-svg-path": "^0.1.1",
     "svg.draggy.js": "^1.1.1",
     "svg.js": "^2.3.2"
