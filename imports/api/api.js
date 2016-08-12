@@ -9,6 +9,7 @@ import Users from './users/users';
 if(Meteor.isServer) {
   require('./items/server/publications.js');
   require('./items/server/routes.js');
+  require('./items/methods.js');
 }
 
 import './classes.js';
