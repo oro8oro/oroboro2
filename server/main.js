@@ -1,7 +1,8 @@
 import { Meteor } from 'meteor/meteor';
-import { createApolloServer } from 'meteor/apollo';
-
 import '../imports/startup/server/index.js';
+
+/*
+import { createApolloServer } from 'meteor/apollo';
 
 import schema from '../imports/api/schema';
 import resolvers from '../imports/api/resolvers';
@@ -20,7 +21,7 @@ createApolloServer({
     //connectors,
     //models,
     //context
-});
+});*/
 
 Meteor.startup(() => {
   // code to run on server at startup

@@ -1,0 +1,16 @@
+<template name="OMenu">
+  <div>
+    {{ > Button id="deleteButton" label="Delete" }}
+    <select id="menu">
+      {{ #each opt in options }}
+        <option value={{ opt }}>{{ opt }}</option>
+      {{ /each }}
+    </select>
+    {{ > Button id="freePath" label=freePathStatus }}
+    <input id="svgInput" type="text"/>
+  </div>
+</template>
+
+<template name="Button">
+  <button id="{{ id }}" class="{{ class }}">{{ label }}</button>
+</template>

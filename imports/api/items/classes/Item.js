@@ -1,11 +1,14 @@
+import absolutize from 'abs-svg-path';
+
 import Oroboro from '../../namespace';
 import Common from '../../../utils/Common';
 import Items from '../items';
-import ItemFactory from './ItemFactory';
+import ItemFactory from '../ItemFactory';
+import * as utils from '../../../utils/svgUtils';
 
-class Item extends Common{
-  constructor() {
-    super()
+class Item extends Common {
+  constructor(doc) {
+    super(doc)
     this._listeners = {
       click: [],
       dragstart: [],
@@ -31,7 +34,7 @@ class Item extends Common{
     // Be sure we have a valid path
     if(!Item.validate(typeof obj.pathArray == 'string' ? JSON.parse(obj.pathArray) : obj.pathArray))
       return;
-   
+
     obj._id = Items.methods.insert.call(obj);
     let item = ItemFactory(obj).draw(parent);
     Oroboro.waitOn[obj._id] = item;
@@ -81,7 +84,7 @@ class Item extends Common{
       return p.slice(1).some(po => {
         // Has to be number - we exclude null, undefined
         // NaN is 'number'
-        if(!po || (typeof po != 'number'))
+        if(typeof po != 'number' || (!po && po != 0))
           return true;
         // We exclude large numbers, including Infinity
         if(po > Number.MAX_SAFE_INTEGER || po < Number.MIN_SAFE_INTEGER)
