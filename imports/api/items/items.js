@@ -3,7 +3,12 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Items = new Mongo.Collection('Items');
 
-const itemTypes = ['SimplePath', 'CubicPath', 'CubicOpenType' ]
+const itemTypes = [
+  'CubicPath', 
+  'CubicOpenType',
+  'SimplePath',
+  'SimpleDialog'
+]
 
 //'para_simple_path', 'para_complex_path', 'text', 'rasterImage', 'formulae', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'nestedSvg', 'qrcode', 'gradient', 'markdown', 'pathEquation'];
 
