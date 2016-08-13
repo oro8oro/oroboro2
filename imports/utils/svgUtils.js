@@ -240,6 +240,20 @@ angleDiffCW = function(alpha, beta) {
   return dA;
 };
 
+
+// Check whether first value v1 is in interval [v2, v3] / (v2, v3).
+isBetween = function(v1, v2, v3, strict=false) {
+  // make sure v2 < v3
+  if(v2 > v3) {
+    var tmp = v2;
+    v2 = v3;
+    v3 = tmp;
+  }
+  if(strict)
+    return (v1 > v2) && (v1 < v3);
+  return (v1 >= v2) && (v1 <= v3);
+};
+
 /**
  * @summary Calculates CCW difference between two angles.
  * @desc Function for calculating the difference between two angles
@@ -702,11 +716,24 @@ normalize = function(svgArr) {
   return svgArr;
 }
 
+const flipAngle = (angle, direction) => {
+  if(angle <= Math.PI)
+    if(direction == 'h')
+      return Math.PI - angle;
+    else
+      return 0 - angle;
+  else
+    if(direction == 'h')
+      return 3*Math.PI - angle;
+  return 2*Math.PI - angle;
+}
+
 
 export { 
   circleParams, ellipseParams, 
-  turnCW, turnCCW, pointByAngleDistance, getAngle,
+  turnCW, turnCCW, pointByAngleDistance, getAngle, flipAngle,
   distance, angleDiff, angleDiffCW, angleDiffCCW, rotatePoint,
+  isBetween, 
   circleToPath, ellipseToPath, rectToPath, lineToPath, polylineToPath, polygonToPath,
   normalize,
   linesIntersection
