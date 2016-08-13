@@ -1,5 +1,4 @@
 import Oroboro from '../../namespace';
-import '../methods';
 import Item from './Item';
 import CubicPath from './CubicPath';
 
@@ -10,6 +9,7 @@ class SimplePath extends CubicPath {
     this._pointList = this.pointListToArray(pointList);
     //
     this._transform = parameters.transform ? parameters.transform : 'simple';
+    this._pathArray = this[this._transform]();
   }
 
   pointListToArray(str) {
@@ -55,12 +55,10 @@ class SimplePath extends CubicPath {
     const { _pointList } = this;
     _pointList[_pointList.length-1].push(p);
     this.update();
+    return this;
   }
 
-  toCubic() {
-    // return CubicPath instance
-  }
-
+  // Returns a pathArray
   simple() {
     const { _pointList, _closed } = this;
 

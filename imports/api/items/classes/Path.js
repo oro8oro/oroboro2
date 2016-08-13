@@ -23,7 +23,7 @@ class Path extends Item {
   draw(parent, multi=false) {
     this._parent = this._parent || parent;
     if(!this._svg || multi) {
-      let d = this._pathArray[0].length ? this._pathArray : 'M 0 0';
+      let d = (this._pathArray && this._pathArray[0] && this._pathArray[0].length) ? this._pathArray : 'M 0 0';
       this._svg = this.getSvg(parent).path(d)
         .attr('id', this._id)
         .opacity(0.6)

@@ -6,6 +6,8 @@ import Items from '../items';
 import ItemFactory from '../ItemFactory';
 import * as utils from '../../../utils/svgUtils';
 
+import '../methods';
+
 class Item extends Common {
   constructor(doc) {
     super(doc)
