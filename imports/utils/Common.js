@@ -53,6 +53,7 @@ class Common {
     let act = this._mem[this._memI --];
     this[act.name](...act.down);
     this.update(update);
+    return this;
   }
 
   redo({ update=true }={}) {
@@ -60,11 +61,13 @@ class Common {
     let act = this._mem[++ this._memI];
     this[act.name](...act.up);
     this.update(update);
+    return this;
   }
 
 
   showMem() {
     window.open('/history/item/'+this._id, '_blank');
+    return this;
   }
 
   updateModifier() {
@@ -92,19 +95,23 @@ class Common {
   move(x, y) {
     let bbox = this._svg.bbox();
     this.mem({ name: 'moveR', up: [ x, y ], down: [ bbox.x, bbox.y ] });
+    return this;
   }
 
   dmove(x, y) {
     this.mem({ name: 'dmoveR', up: [ x, y ], down: [ -x, -y ] });
+    return this;
   }
 
   palette(args) {
     this.mem({ name: 'paletteR', up: [ args ], down: [ this.palette ] });
+    return this;
   }
 
   // Should be implemented by each specific class
   moveR(x, y) {}
   dmoveR(x, y) {}
+  paletteR(args) {}
 }
 
 
