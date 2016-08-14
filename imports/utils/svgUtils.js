@@ -716,7 +716,7 @@ normalize = function(svgArr) {
   return svgArr;
 }
 
-const flipAngle = (angle, direction) => {
+function flipAngle (angle, direction) {
   if(angle <= Math.PI)
     if(direction == 'h')
       return Math.PI - angle;
@@ -728,6 +728,32 @@ const flipAngle = (angle, direction) => {
   return 2*Math.PI - angle;
 }
 
+function wrapText (text, charWidth, width) {
+  let char = charWidth,
+    charno = Math.floor(width / char),
+    temp, lastSpace, newLine, result = [],
+    loop = 0;
+
+  while(text.length > 0 && loop < 20) {
+    temp = text.substring(0, charno);
+    newLine = temp.indexOf('\n');
+    if(newLine != -1) {
+        temp = temp.substring(0, newLine+1);
+    }
+    else if(text[charno] !== ' ' && text.length > charno) {
+        lastSpace = temp.lastIndexOf(' ');
+        temp = temp.substring(0, lastSpace+1);
+        if(temp[0] == ' ') temp = temp.substring(1);
+    }
+    
+    result.push(temp);
+    text = text.substring(temp.length);
+    loop++;
+  } 
+
+  return result;
+}
+
 
 export { 
   circleParams, ellipseParams, 
@@ -736,6 +762,7 @@ export {
   isBetween, 
   circleToPath, ellipseToPath, rectToPath, lineToPath, polylineToPath, polygonToPath,
   normalize,
-  linesIntersection
+  linesIntersection,
+  wrapText,
 };
 
