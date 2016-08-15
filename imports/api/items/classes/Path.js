@@ -34,6 +34,17 @@ class Path extends Item {
     return this;
   }
 
+  trim() {
+    this._pathArray = this._pathArray.map(point => {
+      return point.map((p,i) => {
+        if(i)
+          return this.trimDec(p);
+        return p;
+      });
+    });
+    return this;
+  }
+
   remove() {
     this._svg.remove();
     Item.remove(this._id);
