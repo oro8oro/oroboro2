@@ -12,6 +12,13 @@ class Common {
     // Actions before it are "undos"
     this._memI = doc.mem && doc.mem.index || -1;
     this._listeners = {}
+
+    // utility group, for calculating diverse things
+    this._tempSvg = SVG('OSVGCanvas').group().attr('id', 'tempSvg');
+  }
+
+  get tempSvg() {
+    return this._tempSvg;
   }
 
   getSvg(el) {

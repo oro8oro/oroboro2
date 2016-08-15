@@ -1,6 +1,8 @@
 import Oroboro from '../../namespace';
+import Items from '../items';
 import Item from './Item';
 import SimplePath from './SimplePath';
+import CubicOpenType from './CubicOpenType';
 
 import { 
   distance, 
@@ -15,7 +17,7 @@ import {
 class SimpleDialog extends SimplePath {
   constructor(doc) {
     super(doc);
-    this._radius = 10;
+    this._textId = doc.text;
   }
 
   pointListToArray(str) {
@@ -35,25 +37,25 @@ class SimpleDialog extends SimplePath {
   }
 
   draw(parent, multi) {
-    super.draw(parent, multi);
-    //console.log(this._svg.node.outerHTML);
+    this._group = parent.group();
+    super.draw(this._group, multi);
+    this.setText();
   }
 
   simple() {
     if(this.testGroup)
       this.testGroup.remove();
     this.testGroup = SVG('OSVGCanvas').group();
-    //let box = this.simpleBox();
-    let box = this.roundedBox();
-    //console.log(JSON.stringify(box));
-    box = this.simpleConnector(box);
-    //console.log(JSON.stringify(box));
-    return box;
+    //this.setBoxCorners().simpleBox();
+    this.setBoxCorners()
+      .roundedBox()
+      .simpleConnector();
+
+    return this._pathArray;
   }
 
-  getBoxCorners() {
-    let r = this._radius,
-      center = this._pointList[1],
+  setBoxCorners() {
+    let center = this._pointList[1],
       p1 = this._pointList[2],
       d = distance(center, p1),
       p2 = pointByAngleDistance(center, flipAngle(getAngle(center, p1), 'h'), d),
@@ -74,17 +76,25 @@ class SimpleDialog extends SimplePath {
           _pointList[0] = [ pageX, pageY ];
           self.update();
         });
+      let start, ini;
       this.testGroup.circle(10).cx(center[0]).cy(center[1])
         .opacity(0.8).fill('#FF0600')
         .draggy()
+        .on('dragstart', function(e) {
+          let { pageX, pageY } = e.detail.event;
+          start = [ pageX, pageY ];
+          ini = JSON.parse(JSON.stringify(_pointList[2]));
+        })
         .on('dragmove', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[1] = [ pageX, pageY ];
+          _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
           self.update(false);
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[1] = [ pageX, pageY ];
+          _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
           self.update();
         });
       this.testGroup.circle(10).cx(p1[0]).cy(p1[1])
@@ -101,12 +111,12 @@ class SimpleDialog extends SimplePath {
           self.update();
         });
       
-      
-    return [ p1, p2, p3, p4 ];
+    this._boxCorners = [ p1, p2, p3, p4 ];
+    return this;
   }
 
   simpleBox() {
-    let [ p1, p2, p3, p4 ] = this.getBoxCorners();
+    let [ p1, p2, p3, p4 ] = this._boxCorners;
     return [
       [ 'M', p1[0], p1[1] ],
       [ 'L', p2[0], p2[1] ],
@@ -117,22 +127,21 @@ class SimpleDialog extends SimplePath {
   }
 
   roundedBox() {
-    let points = this.getBoxCorners();
+    // [ [x, y], ...] - 4 points
+    let points = this._boxCorners,
+      textBox = [];
     if(points.length < 2)
         return [ 'M', 0, 0 ];
-    this._radius = (this._radius || this._radius == 0) ? this._radius : 20
-    var pp = points,
+    let pp = points,
       center = this._pointList[1],
-      closed = true,
+      radius = this._radius = distance(center, pp[0]) / 10,
       fS = 1,
-      rx = this._radius, ry = this._radius,
-      path,
+      rx = radius, ry = radius,
+      path = [ 'M', pp[0][0], pp[0][1] ],
       c, dx, dy, a, bis, p1, p2, pp1, pp2, at1, at2, ph, pq1, pq2,
-      a1, a2, cw = 0, ccw = 0,
-      ini = closed ? 0 : 1,
-      end = closed ? pp.length : pp.length-1
+      a1, a2, cw = 0, ccw = 0;
 
-    for(var i=ini; i<end; i++) {
+    for(let i=0; i<pp.length; i++) {
         if(i==0)
             pp1 = pp[pp.length-1]
         else
@@ -163,7 +172,7 @@ class SimpleDialog extends SimplePath {
         at1 = pointByAngleDistance(pp[i], a1, distance(pp[i], p1)/2)
         at2 = pointByAngleDistance(pp[i], a2, distance(pp[i], p2)/2)
 
-        if(i==0 && closed)
+        if(i==0)
             path = [ ['M', p1[0], p1[1]] ]
 
         // We want to add some additional points (1/2 and 1/4 on each side)
@@ -208,17 +217,36 @@ class SimpleDialog extends SimplePath {
         this.testGroup.circle(7).cx(pq22[0]).cy(pq22[1]).opacity(0.8).fill('#64645C');
     }
 
-    if(closed)
-        path.push([ 'Z' ])
-    else
-        path.push(['L', pp[pp.length-1][0], pp[pp.length-1][1]])
-    return path;
+    let l = path[path.length-1].length;
+    path.push([ 'L', path[path.length-1][l-2], path[path.length-1][l-1] ]);
+    path.push([ 'Z' ]);
+    this._pathArray = path;
+    return this;
   }
 
-  simpleConnector(box) {
+  setText() {
+    this._text = new CubicOpenType(Items.findOne(this._textId));
+    let width = distance(this._boxCorners[0], this._boxCorners[1]),
+      height = distance(this._boxCorners[1], this._boxCorners[2]),
+      delta = width / 20,
+      x = Math.min(...this._boxCorners.map(p => p[0])) + delta,
+      y = Math.min(...this._boxCorners.map(p => p[1])) + delta;
+
+    this._text._pointList = [x,y];
+    this._text.wrap(
+      width - 2*delta, 
+      height - 2*delta,
+      this._group
+    );
+    return this;
+  }
+
+  simpleConnector() {
     let tip = this._pointList[0],
+      box = this._pathArray,
       pos, corner, distMin = Infinity, dist;
       //console.log('tip: ', tip)
+      //console.log(JSON.stringify(box))
     box.forEach((p, i) => {
       if(p[0] != 'C')
         return;
@@ -304,7 +332,8 @@ class SimpleDialog extends SimplePath {
         box.splice(pos, 1, [ 'L', tip[0], tip[1] ], [ 'L', corner[0], corner[1] ] );
       }
 
-    return box;
+    this._pathArray = box;
+    return this;
   }
 
 };
