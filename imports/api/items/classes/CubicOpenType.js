@@ -31,21 +31,21 @@ class CubicOpenType extends CubicPath {
     });
   }
 
-  OpenTypeToCubic(array) {
-    return array.map(a => {
+  OpenTypeToCubic(array, chain=true) {
+    array = array.map(a => {
       let p = [ a.type ];
-      if(a.x1)
-        p.push(a.x1);
-      if(a.y1)
-        p.push(a.y1);
-      if(a.x2)
-        p.push(a.x2);
-      if(a.y2)
-        p.push(a.y2);
-      if(a.x)
-        p.push(a.x);
-      if(a.y)
-        p.push(a.y);
+      if(typeof a.x1 == 'number')
+        p.push(this.trimDec(a.x1));
+      if(typeof a.y1 == 'number')
+        p.push(this.trimDec(a.y1));
+      if(typeof a.x2 == 'number')
+        p.push(this.trimDec(a.x2));
+      if(typeof a.y2 == 'number')
+        p.push(this.trimDec(a.y2));
+      if(typeof a.x == 'number')
+        p.push(this.trimDec(a.x));
+      if(typeof a.y == 'number')
+        p.push(this.trimDec(a.y));
       return p;
     });
   }
