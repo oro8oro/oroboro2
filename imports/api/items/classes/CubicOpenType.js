@@ -10,11 +10,7 @@ class CubicOpenType extends CubicPath {
   constructor(doc) {
     super(doc);
     let self = this;
-    this._url = doc.parameters.url;
-    this._text = doc.text;
-    this._pointList = doc.pointList;
-    this._font = doc.font || {};
-    this._font.size = this._font.size || 10;
+
     this._OpenType = null;
 
     // Load the font only one time
@@ -31,11 +27,36 @@ class CubicOpenType extends CubicPath {
     );
   }
 
+  defaults() {
+    return Object.assign({
+      font: { size: 10 }
+    }, super.defaults());
+  }
+
+  setter(doc) {
+    let { parameters, text, font, pointList } = doc,
+      update = 0;
+    if(parameters) {
+      this._url = parameters.url;
+      update ++;
+    }
+    if(text) {
+      this._text = text;
+      update ++;
+    }
+    if(font) {
+      this._font = font;
+      update ++;
+    }
+    if(pointList) {
+      this._pointList = pointList;
+      update ++;
+    }
+    return update;
+  }
+
   draw(parent, multi) {
     if(this._pathArray) {
-      console.log('super draw')
-      //console.log(JSON.stringify(this._pathArray));
-      console.log(parent);
       super.draw(parent, multi);
       this._svg.stroke({width: 0}).fill('#000000');
       return this;
@@ -67,7 +88,7 @@ class CubicOpenType extends CubicPath {
     let self = this;
     text = text || this._text;
     fontSize = fontSize || this._font.size;
-    console.log(text, fontSize, self._pointList)
+    //console.log(text, fontSize, self._pointList)
     return this._promise.then(function(font) {
       let path = font.getPath(text, self._pointList[0], self._pointList[1], fontSize);
       return self.OpenTypeToCubic(path.commands, false);
@@ -117,7 +138,7 @@ class CubicOpenType extends CubicPath {
       let { lines, width } = res;
       fontSize = fontSize * w / width;
 
-      console.log('new fontSize: ', fontSize);
+      //console.log('new fontSize: ', fontSize);
 
       return Promise.all(lines.map(function(l) {
         return self.textToCubic(l, fontSize).then(function(path) {
@@ -143,8 +164,11 @@ class CubicOpenType extends CubicPath {
           dy += rowh;
           return path;
         }).reduce((a,b) => {return a.concat(b);});
-
-      self.draw(parent);
+      
+      if(!self._svg)
+        self.draw(parent);
+      else
+        self._svg.plot(self._pathArray);
     });
   }
 
@@ -159,7 +183,7 @@ class CubicOpenType extends CubicPath {
       w = size.width,
       hspace = len < 1000 ? (size.height/2) : (size.height*3/2),
       h = size.height + hspace;
-console.log('width: ', w);
+    //console.log('width: ', w);
     // Utopic number of lines of text
     let n = Math.ceil(Math.sqrt(w / (ratio * h))),
       // Utopic width of a text line
@@ -168,15 +192,15 @@ console.log('width: ', w);
       // True lines of text at the utopic width
       lines = this.wrapToWidth(w2, charW, text);
 
-    console.log(n, lines.length, w2)
-    console.log(JSON.stringify(lines));
+    //console.log(n, lines.length, w2)
+    //console.log(JSON.stringify(lines));
 
     // Text is wrapped in the specified ratio
     if(n != lines.length) {
 
       // Ratio: Initial width and the total utopic width
       let r = w / (w2 * lines.length);
-      console.log(r)
+      //console.log(r)
 
       if(!fontSize)
         this._font.size *= r;

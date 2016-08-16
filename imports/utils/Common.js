@@ -5,16 +5,49 @@ if(Meteor.isClient) {
 
 class Common {
   constructor(doc) {
-    // History
-    this._mem = JSON.parse(doc.mem && doc.mem.chain || '[]');
-    // Index of last valid action
-    // Actions after it are "redos"
-    // Actions before it are "undos"
-    this._memI = doc.mem && doc.mem.index || -1;
-    this._listeners = {}
 
-    // utility group, for calculating diverse things
+    // Set defaults
+    this.setter(this.defaults());
+    // Set actual data
+    this.setter(doc);
+
+    this._listeners = {}
+    // Utility group, for calculating diverse things
     this._tempSvg = SVG('OSVGCanvas').group().attr('id', 'tempSvg');
+  }
+
+  defaults() {
+    return {
+      mem: {
+        chain: '[]',
+        index: -1
+      }
+    }
+  }
+
+  setter(doc) {
+    let { mem } = doc,
+      update = 0;
+
+    // History
+    if(mem) {
+      if(mem.chain)
+        this._mem = JSON.parse(mem.chain);
+      // Index of last valid action
+      // Actions after it are "redos"
+      // Actions before it are "undos"
+      if(mem.index)
+        this._memI = mem.index;
+      update ++;
+    }
+    return update;
+  }
+
+  // We receive the db object after a fresh update 
+  refresh(obj) {
+    let updates = this.setter(obj);
+    if(updates)
+      this.update({ db: false });
   }
 
   get tempSvg() {
@@ -30,6 +63,7 @@ class Common {
   trimDec(no, dec=3) {
     return parseFloat(no.toFixed(dec));
   }
+
 
   // Function name and do/undo parameters
   // update database or not

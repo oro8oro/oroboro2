@@ -19,6 +19,19 @@ class Item extends Common {
     };
   }
 
+  update({ db=true }) {
+    this._cache = this._svg.node.outerHTML;
+    if(db) {
+      Item.update({ id: this._id, modifier: this.updateModifier() });
+      console.log('item db updated')
+    }
+  }
+
+  remove() {
+    this._svg.remove();
+    Item.remove(this._id);
+  }
+
   static insert(obj, parent) {
     if(obj.cache && !obj.pointList && !obj.pathArray) {
       let res = Item.svgToPathArray(obj.cache, parent);

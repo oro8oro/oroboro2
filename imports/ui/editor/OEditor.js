@@ -152,16 +152,17 @@ Template.OEditor.onCreated(function() {
 
   this.autorun(() => {
     Items.find({}).observe({
-    added: (doc) => {
-      this.addItem(doc);
-    },
-    changed: (newdoc, olddoc) => {
-      console.log('changed');
-    },
-    removed: (doc) => {
-      console.log('removed');
-    }
-  });
+      added: (doc) => {
+        this.addItem(doc);
+      }
+    });
+    Items.find({}).observeChanges({
+      changed: (id, fields) => {
+        let item = Oroboro.find(id);
+        if(item)
+          item.refresh(fields);
+      }
+    });
   });
 
   Oroboro.elem = this.items;

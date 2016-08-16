@@ -78,13 +78,6 @@ class CubicPath extends Path {
     return Item.insert(obj, this._parent);
   }
 
-  update(updateDB=true) {
-    this._svg.plot(this._pathArray);
-    this._cache = this._svg.node.outerHTML;
-    if(updateDB)
-      Item.update({ id: this._id, modifier: this.updateModifier() });
-  }
-
   updateModifier() {
     return Object.assign(super.updateModifier(), {
       pathArray: JSON.stringify(this._pathArray),

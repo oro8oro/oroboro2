@@ -27,9 +27,9 @@ class SimplePath extends CubicPath {
     this.update();
   }
 
-  update(updateDB) {
+  update({ db }={}) {
     this._pathArray = this[this._transform]();
-    super.update(updateDB);
+    super.update({ db });
   }
 
   updateModifier() {

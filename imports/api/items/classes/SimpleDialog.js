@@ -69,7 +69,7 @@ class SimpleDialog extends SimplePath {
         .on('dragmove', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[0] = [ pageX, pageY ];
-          self.update(false);
+          self.update({ db: false });
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
@@ -89,7 +89,7 @@ class SimpleDialog extends SimplePath {
           let { pageX, pageY } = e.detail.event;
           _pointList[1] = [ pageX, pageY ];
           _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
-          self.update(false);
+          self.update({ db: false });
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
@@ -103,7 +103,7 @@ class SimpleDialog extends SimplePath {
         .on('dragmove', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[2] = [ pageX, pageY ];
-          self.update(false);
+          self.update({ db: false });
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;

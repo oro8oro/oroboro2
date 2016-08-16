@@ -4,20 +4,65 @@ class Path extends Item {
   // pathList -> cache (svg code)
   constructor(doc) {
     super(doc);
-    this._doc = doc;
-    let { _id, closed=true, pathArray, palette, selected, locked } = doc;
-    this._id = _id;
-    this._pathArray = JSON.parse(pathArray || '[]');
-    this._closed = closed;
-    this._palette = palette;
-    this._selected = selected;
-    this._locked = locked;
+    //this._doc = doc;
+    this._id = doc._id;
     this._svg = null;
-    this._cache = '';
+  }
+
+  defaults() {
+    return Object.assign({
+      closed: true,
+      pathArray: '[]',
+      cache: ''
+    }, super.defaults());
+  }
+
+  setter(doc) {
+    super.setter(doc);
+    let { closed, pathArray, palette, selected, locked, cache } = doc,
+      update = 0;
+
+    if(closed) {
+      this._closed = closed;
+      update ++;
+    }
+    if(pathArray) {
+      this._pathArray = JSON.parse(pathArray);
+      update ++;
+    }
+    if(palette) {
+      this._palette = palette;
+      update ++;
+    }
+    if(selected) {
+      this._selected = selected;
+      update ++;
+    }
+    if(locked) {
+      this._locked = locked;
+      update ++;
+    }
+    if(cache) {
+      this._cache = cache;
+      update ++;
+    }
+    return update
+  }
+
+  update({ db }={}) {
+    this._svg.plot(this._pathArray);
+    super.update({ db });
   }
 
   get svg() {
     return this._svg;
+  }
+
+  refresh(obj) {
+    if(obj.pathArray && JSON.stringify(obj.pathArray) != JSON.stringify(this._pathArray)) {
+      this._pathArray = obj.pathArray;
+      this.update(false);
+    }
   }
 
   draw(parent, multi=false) {
@@ -43,11 +88,6 @@ class Path extends Item {
       });
     });
     return this;
-  }
-
-  remove() {
-    this._svg.remove();
-    Item.remove(this._id);
   }
 
   open() {}
