@@ -4,3 +4,4 @@ import './classes/CubicPath';
 import './classes/CubicOpenType';
 import './classes/SimplePath';
 import './classes/SimpleDialog';
+import './classes/Actor';

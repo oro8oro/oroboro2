@@ -7,7 +7,8 @@ const itemTypes = [
   'CubicPath', 
   'CubicOpenType',
   'SimplePath',
-  'SimpleDialog'
+  'SimpleDialog',
+  'Actor',
 ]
 
 //'para_simple_path', 'para_complex_path', 'text', 'rasterImage', 'formulae', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'nestedSvg', 'qrcode', 'gradient', 'markdown', 'pathEquation'];
