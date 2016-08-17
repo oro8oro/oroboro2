@@ -76,13 +76,14 @@ class SimpleDialog extends SimplePath {
           _pointList[0] = [ pageX, pageY ];
           self.update();
         });
-      let start, ini;
+      let start, ini, temp;
       this.testGroup.circle(10).cx(center[0]).cy(center[1])
         .opacity(0.8).fill('#FF0600')
         .draggy()
         .on('dragstart', function(e) {
           let { pageX, pageY } = e.detail.event;
           start = [ pageX, pageY ];
+          temp = [ pageX, pageY ];
           ini = JSON.parse(JSON.stringify(_pointList[2]));
         })
         .on('dragmove', function(e) {
@@ -90,6 +91,8 @@ class SimpleDialog extends SimplePath {
           _pointList[1] = [ pageX, pageY ];
           _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
           self.update({ db: false });
+          self._text.dmoveR(pageX - temp[0], pageY - temp[1]);
+          temp = [ pageX, pageY ];
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
@@ -109,6 +112,7 @@ class SimpleDialog extends SimplePath {
           let { pageX, pageY } = e.detail.event;
           _pointList[2] = [ pageX, pageY ];
           self.update();
+          self.positionText();
         });
       
     this._boxCorners = [ p1, p2, p3, p4 ];
@@ -226,6 +230,11 @@ class SimpleDialog extends SimplePath {
 
   setText() {
     this._text = new CubicOpenType(Items.findOne(this._textId));
+    this.positionText();
+    return this;
+  }
+
+  positionText() {
     let width = distance(this._boxCorners[0], this._boxCorners[1]),
       height = distance(this._boxCorners[1], this._boxCorners[2]),
       delta = width / 20,
