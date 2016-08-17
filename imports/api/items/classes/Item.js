@@ -19,10 +19,10 @@ class Item extends Common {
     };
   }
 
-  update({ db=true }) {
+  update({ db=true, modifier={} }) {
     this._cache = this._svg.node.outerHTML;
     if(db) {
-      Item.update({ id: this._id, modifier: this.updateModifier() });
+      Item.update({ id: this._id, modifier: Object.assign(modifier, this.updateModifier())});
       console.log('item db updated')
     }
   }
