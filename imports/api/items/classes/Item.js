@@ -22,7 +22,7 @@ class Item extends Common {
   update({ db=true, modifier={} }) {
     this._cache = this._svg.node.outerHTML;
     if(db) {
-      Item.update({ id: this._id, modifier: Object.assign(modifier, this.updateModifier())});
+      Items.methods.update.call({ id: this._id, modifier: Object.assign(modifier, this.updateModifier())});
       console.log('item db updated')
     }
   }
@@ -54,10 +54,6 @@ class Item extends Common {
     let item = ItemFactory(obj).draw(parent);
     Oroboro.waitOn[obj._id] = item;
     return item;
-  }
-
-  static update(obj) {
-    Items.methods.update.call(obj);
   }
 
   static delete(id) {
