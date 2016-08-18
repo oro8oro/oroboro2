@@ -1,19 +1,15 @@
 import Oroboro from '../../namespace';
-import Item from './Item';
+import Items from '../items';
+import SimplePath from './SimplePath';
 import SVG from 'svg.js';
 import 'svg.draggy.js';
 import '../../../utils/connectable.js';
 
-class Actor extends Item {
+class Actor extends SimplePath {
   setter(doc) {
-    super.setter(doc);
-    let { parameters, pointList } = doc,
-      update = 0;
+    let update = super.setter(doc);
+    let { parameters } = doc;
 
-    if(pointList) {
-      this._pointList = JSON.parse(pointList);
-      update ++;
-    }
     if(parameters) {
       if(parameters.bone)
         this.bone = JSON.parse(parameters.bone);
@@ -23,40 +19,46 @@ class Actor extends Item {
         this.positions = JSON.parse(parameters.positions);
       if(parameters.head)
         this.head = parameters.head;
-      if(parameters.position)
-        this.position = JSON.parse(parameters.position);
       update ++;
     }
     return update;
   }
 
   draw(parent) {
-    let { _pointList, onDragStart, onDragMove, onDragEnd } = this;
-    this._svg = this.getSvg(parent).puppet(_pointList[0], _pointList[1], this, {
+    let { _pointList, bone, joint, head, onDragStart, onDragMove, onDragEnd } = this;
+    this._svg = this.getSvg(parent).puppet({
+      points: _pointList[0],
+      bone,
+      joint,
+      head,
+    }, {
       //onDragStart,
       //onDragMove,
-      onDragEnd: (e, delta, type) => { this.onDragEnd(e, delta, type); }
+      onDragEnd: (e, delta, type, points) => { this.onDragEnd(e, delta, type, points); }
     });
     return this;
   }
 
-  onDragEnd(e, delta, type) {
+  simple() {
+    return '[]';
+  }
+
+  // Temporarily, we have to make the _svg a path
+  update({ db=true, modifier={} }={}) {
+    this._cache = this._svg.node.outerHTML;
+    if(db) {
+      Items.methods.update.call({ id: this._id, modifier: {
+        pointList: JSON.stringify(this._pointList)
+      }});
+    }
+  }
+
+  onDragEnd(e, delta, type, points) {
     if(!type)
       return;
-    console.log('onDragEnd', type);
-    if(type == 'Actor') {
-      this._pointList = [ this._pointList[0] + delta.movedX, this._pointList[1] + delta.movedY ]
-      this.update({modifier: {
-        _pointList: JSON.stringify(this._pointList)
-      }});
-      return;
-    }
-
-    let index = this._svg.jointInd(type);
-    this.position[index] = [ this.position[index][0] + delta.movedX, this.position[index][1] + delta.movedY ];
-    this.update({modifier: {
-      'parameters.position': JSON.stringify(this.position) 
-    }});
+    this._pointList = [points];
+    this.update();
+    return this;
   }
 }
 
@@ -72,16 +74,14 @@ SVG.Puppet = SVG.invent({
   // Add custom methods to invented shape
   extend: {
     // Create method to proportionally scale the rounded corners
-    ini: function(x, y, { 
-      position, head, bone, joint 
+    ini: function({ 
+      points, head, bone, joint 
     }, {
       onDragStart, onDragMove, onDragEnd
     }) { 
       //this.item = svg.group();
       let self = this 
-      this.x = x;
-      this.y = y;
-      this.position = position;
+      this.points = points;
       this.head = head;
       this.bone = bone;
       this.joint = joint;
@@ -95,52 +95,50 @@ SVG.Puppet = SVG.invent({
       this.bones = []; 
       this.bonesItem = this.group()
       
-      if (this.position !== undefined){
-          self.joints.push(this.circle(this.joint[0][1]*this.scale*2).cx((this.position[0][0]+x)*this.scale).cy((this.position[0][1]+y)*this.scale).attr({ 
-              stroke: "#fff",
-              "stroke-width": 2
-          }).draggy());
-          let start, ini;
-          self.Actor = this.joints[0]
-            .on("dragstart", function(e){
-              let { pageX, pageY } = e.detail.event;
-              start = [ pageX, pageY ];
-              ini = [ pageX, pageY ];
-              self.onDragStart(e.detail.event, 'Actor');
-            })
-            .on("dragmove", function(e){
-              let { pageX, pageY } = e.detail.event;
-              self.move(pageX - ini[0], pageY - ini[1]);
-              self.onDragMove(e.detail.event, {
-                movedX: pageX - start[0],
-                movedY: pageY - start[1],
-                deltaX: pageX - ini[0],
-                deltaY: pageY - ini[1],
-              }, 'Actor');
-              ini = [ pageX, pageY ];
-            })
-            .on("dragend", function(e){
-              let { pageX, pageY } = e.detail.event;
-              self.move(pageX - ini[0], pageY - ini[1]);
-              console.log(e)
-              onDragEnd(e.detail.event, {
-                movedX: pageX - start[0],
-                movedY: pageY - start[1],
-                deltaX: pageX - ini[0],
-                deltaY: pageY - ini[1],
-              }, 'Actor');
-            });
+      if (this.points !== undefined){
+        self.joints.push(this.circle(this.joint[0][1]*this.scale*2).cx(this.points[0][0]*this.scale).cy(this.points[0][1]*this.scale).attr({ 
+            stroke: "#fff",
+            "stroke-width": 2
+        }).draggy());
+        let start, ini;
+        self.Actor = this.joints[0]
+          .on("dragstart", function(e){
+            let { pageX, pageY } = e.detail.event;
+            start = [ pageX, pageY ];
+            ini = [ pageX, pageY ];
+            self.onDragStart(e.detail.event, 'Actor');
+          })
+          .on("dragmove", function(e){
+            let { pageX, pageY } = e.detail.event;
+            self.move(pageX - ini[0], pageY - ini[1]);
+            self.onDragMove(e.detail.event, {
+              movedX: pageX - start[0],
+              movedY: pageY - start[1],
+              deltaX: pageX - ini[0],
+              deltaY: pageY - ini[1],
+            }, 'Actor');
+            ini = [ pageX, pageY ];
+          })
+          .on("dragend", function(e){
+            let { pageX, pageY } = e.detail.event;
+            self.move(pageX - ini[0], pageY - ini[1]).sync();
+            self.onDragEnd(e.detail.event, {
+              movedX: pageX - start[0],
+              movedY: pageY - start[1],
+              deltaX: pageX - ini[0],
+              deltaY: pageY - ini[1],
+            }, 'Actor', self.points);
+          });
       } else {
           //self.joints[0].cx(x).cy(y);
       }
        
         
       for (let ndx=0;ndx <this.joint.length;ndx++){
-        //console.log(h.Class[position][ndx][1]) 
-        if (this.position !== undefined){
+        if (this.points !== undefined){
             this.joints[ndx] = this.circle(this.joint[ndx][1]*this.scale)
-              .cx(this.position[ndx][0]*this.scale+x)
-              .cy(this.position[ndx][1]*this.scale+y)
+              .cx(this.points[ndx][0]*this.scale)
+              .cy(this.points[ndx][1]*this.scale)
               .attr({
                 stroke: "#fff",
                 "stroke-width": 2*this.scale
@@ -166,17 +164,21 @@ SVG.Puppet = SVG.invent({
               .on("dragend", function(e){
                 if(self.joint[ndx][0] == 'Head' || self.joint[ndx][0] == 'Neck')
                   self.modHead();
-                self.onDragEnd(e.detail.event, self.joint[ndx][0]);
+                let x = this.cx(), y = this.cy();
+                self.sync(ndx, x, y)
+                  .onDragEnd(e.detail.event, {
+                    x,
+                    y,
+                  }, self.joint[ndx][0], self.points);
               });
             
         } else {
-            self.joints[ndx].cx(self.joints[ndx].cx()+x).cy(this.joints[ndx].cy()+y)
-            //console.log(self.joints[ndx].cy()+y)
+            self.joints[ndx].cx(self.joints[ndx].cx()).cy(this.joints[ndx].cy())
         }
 
       } 
       
-      if (this.position !== undefined){
+      if (this.points !== undefined){
       this.setBones()
       if(this.head) {
           this.headItem = this.image(this.head, 100, 100) //.cx(this.joints[4].cx()).cy(this.joints[4].cy()+10)
@@ -204,6 +206,16 @@ SVG.Puppet = SVG.invent({
       // Update head
       if(this.head)
         this.modHead();
+      return this;
+    },
+    sync: function(ndx, x, y) {
+      if(ndx)
+        this.points[ndx] = [x, y];
+      else
+        this.points = this.joints.map(j => {
+          return [j.cx(), j.cy()];
+        });
+      return this;
     },
     jointInd(name) {
       let index;
@@ -236,19 +248,20 @@ SVG.Puppet = SVG.invent({
       this.headItem.attr({width:2*w,height:2*w}).cx(this.joints[headJ].cx()).cy(this.joints[headJ].cy()+10); 
       this.headItem.transform({rotation:(-Math.atan((1/ang+0.00))*180/Math.PI)})  // (ang)*180/Math.PI+270  // -90*s
       //self1.say();
-        
+      return this;
     },
     setBones: function(){
       for (let ndx in this.bone){
-          //console.log(this.joints[h.Class.bone[ndx][1]].connectable()) 
-           
-          this.bones.push(
-            this.joints[this.bone[ndx][0]+1].connectable({
-              container: this.bonesItem,
-              width: this.bone[ndx][2]*this.scale
-            }, this.joints[this.bone[ndx][1]+1]
-          ));
+        //console.log(this.joints[h.Class.bone[ndx][1]].connectable()) 
+         
+        this.bones.push(
+          this.joints[this.bone[ndx][0]+1].connectable({
+            container: this.bonesItem,
+            width: this.bone[ndx][2]*this.scale
+          }, this.joints[this.bone[ndx][1]+1]
+        ));
       }
+      return this;
     },
     mirror: function(){
       let x= this.joints[0].cx();
@@ -297,12 +310,12 @@ SVG.Puppet = SVG.invent({
   construct: {
     // Create a rounded element
     
-    puppet: function(x,y,obj,callb) {
+    puppet: function(obj,callb) {
         //this.put(new SVG.Puppet)
         //console.log("om") 
         // new SVG.Puppet
         //this.ini(x,y,stance)
-      return this.put(new SVG.Puppet).ini(x,y,obj,callb);
+      return this.put(new SVG.Puppet).ini(obj,callb);
     } 
 
   }
