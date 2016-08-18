@@ -3,17 +3,25 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 
 const Groups = new Mongo.Collection('Groups');
 
+let Types = [
+  'Group',
+  'Layer'
+];
+
+//['menu', 'menu_item', 'menu_button', 'layer', 'simpleGroup', 'linkedGroup', 'parametrizedGroup']
+
 Groups.schema = new SimpleSchema({
   uuid: {
       type: String,
       label: 'Subject',
       optional: true,
   },
-  fileId: {
+  file: {
       type: String,
       label: 'File Id',
+      optional: true,
   },
-  groupId: {
+  group: {
       type: String,
       label: 'Group Id',
       optional: true,
@@ -22,7 +30,7 @@ Groups.schema = new SimpleSchema({
       type: String,
       label: 'Type',
       optional: true,
-      allowedValues: ['menu', 'menu_item', 'menu_button', 'layer', 'simpleGroup', 'linkedGroup', 'parametrizedGroup'],
+      allowedValues: Types,
   },
   ordering: {
       type: Number,

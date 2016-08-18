@@ -75,7 +75,7 @@ Files.schema = new SimpleSchema({
       label: 'View Permissions',
       optional: true,
   },
-  creatorId: {
+  creator: {
       type: String,
       label: 'Creator',
       max: 200,
@@ -110,12 +110,12 @@ Files.schema = new SimpleSchema({
       optional: true,
       defaultValue: [],
   },
-  groupids: {
+  groups: {
       type: [String],
       label: 'Group Ids',
       optional: true,
   },
-  itemids: {
+  items: {
       type: [String],
       label: 'Item Ids',
       optional: true,

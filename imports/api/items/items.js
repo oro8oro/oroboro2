@@ -18,10 +18,9 @@ Items.schema = new SimpleSchema({
     type: String,
     optional: true,
   },
-  groupId: {
+  group: {
       type: String,
       label: 'Group Id',
-      optional: true,
   },
   type: {
       type: String,
