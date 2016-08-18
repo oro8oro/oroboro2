@@ -36,10 +36,6 @@ class SimplePath extends CubicPath {
     return Object.assign(super.updateModifier(), {
       pointList: JSON.stringify(this._pointList),
       parameters: { transform: this._transform },
-      mem: {
-        chain: JSON.stringify(this._mem),
-        index: this._memI,
-      }
     });
   }
 

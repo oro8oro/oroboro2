@@ -229,7 +229,10 @@ class SimpleDialog extends SimplePath {
   }
 
   setText() {
-    this._text = new CubicOpenType(Items.findOne(this._textId));
+    //this._text = new CubicOpenType(Items.findOne(this._textId));
+    this._text = Oroboro.find(this._textId);
+    // Avoid showing ugly text in the beginning, before wrap
+    this._svgText = this._svg.parent().use(this._text._svg).opacity(0);
     this.positionText();
     return this;
   }
@@ -245,7 +248,8 @@ class SimpleDialog extends SimplePath {
     this._text.wrap(
       width - 2*delta, 
       height - 2*delta,
-      this._group
+      // Show text now
+      () => { this._svgText.front().opacity(1); }
     );
     return this;
   }

@@ -14,6 +14,7 @@ class Common {
     this._listeners = {}
     // Utility group, for calculating diverse things
     this._tempSvg = SVG('OSVGCanvas').group().attr('id', 'tempSvg');
+    this._defs = SVG('OSVGCanvas').defs();
   }
 
   defaults() {
@@ -21,12 +22,13 @@ class Common {
       mem: {
         chain: '[]',
         index: -1
-      }
+      },
+      defs: false
     }
   }
 
   setter(doc) {
-    let { mem } = doc,
+    let { mem, defs } = doc,
       update = 0;
 
     // History
@@ -40,7 +42,19 @@ class Common {
         this._memI = mem.index;
       update ++;
     }
+    if(defs) {
+      this._indefs = defs;
+      update ++;
+    }
     return update;
+  }
+
+  draw(parent) {
+    if(this._indefs)
+      this._parent = this._defs;
+    else
+      this._parent = this.getSvg(parent || this._parent);
+    return this;
   }
 
   // We receive the db object after a fresh update 

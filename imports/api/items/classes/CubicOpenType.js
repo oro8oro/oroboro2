@@ -34,8 +34,8 @@ class CubicOpenType extends CubicPath {
   }
 
   setter(doc) {
-    let { parameters, text, font, pointList } = doc,
-      update = 0;
+    let update = super.setter(doc);
+    let { parameters, text, font, pointList } = doc;
     if(parameters) {
       this._url = parameters.url;
       update ++;
@@ -56,18 +56,20 @@ class CubicOpenType extends CubicPath {
   }
 
   draw(parent, multi) {
-    if(this._pathArray) {
-      super.draw(parent, multi);
-      this._svg.stroke({width: 0}).fill('#000000');
-      return this;
-    }
+    // Draw a default path first
+    super.draw(parent, multi);
+    this._svg.stroke({width: 0}).fill('#000000');
 
+    // Load font and draw the real path
     let self = this;
-    let draw = super.draw;
     this._promise.then(function(font) {
-      let path = font.getPath(self._text, self._pointList[0], self._pointList[1], self._font.size);
+      let path = font.getPath(
+        self._text, 
+        self._pointList[0], 
+        self._pointList[1], 
+        self._font.size);
       self.OpenTypeToCubic(path.commands)
-      draw.call(self, parent, multi);
+        .update({ db:false });
     });
     return this;
   }
@@ -123,10 +125,11 @@ class CubicOpenType extends CubicPath {
     return array;
   }
 
-  wrap(w, h, parent, text, fontSize, type='left') {
-    let self = this, _size;
-    text = text || this._text;
-    fontSize = fontSize || this._font.size;
+  wrap(w, h, callb) {
+    let self = this, _size,
+      type='left',
+      text = this._text,
+      fontSize = this._font.size;
     //type = 'center';
     //type = 'right';
     this.textSize(text, fontSize).then(function(size) {
@@ -165,10 +168,9 @@ class CubicOpenType extends CubicPath {
           return path;
         }).reduce((a,b) => {return a.concat(b);});
       
-      if(!self._svg)
-        self.draw(parent);
-      else
         self._svg.plot(self._pathArray);
+        if(callb)
+          callb();
     });
   }
 

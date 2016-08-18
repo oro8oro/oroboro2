@@ -18,9 +18,8 @@ class Path extends Item {
   }
 
   setter(doc) {
-    super.setter(doc);
-    let { closed, pathArray, palette, selected, locked, cache } = doc,
-      update = 0;
+    let update = super.setter(doc);
+    let { closed, pathArray, palette, selected, locked, cache } = doc;
 
     if(closed) {
       this._closed = closed;
@@ -66,10 +65,10 @@ class Path extends Item {
   }
 
   draw(parent, multi=false) {
-    this._parent = this._parent || parent;
+    super.draw(parent);
     if(!this._svg || multi) {
       let d = (this._pathArray && this._pathArray[0] && this._pathArray[0].length) ? this._pathArray : 'M 0 0';
-      this._svg = this.getSvg(parent).path(d)
+      this._svg = this._parent.path(d)
         .attr('id', this._id)
         .opacity(0.6)
         .stroke({color: '#000', width:1})

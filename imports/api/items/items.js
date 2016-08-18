@@ -190,6 +190,11 @@ Items.schema = new SimpleSchema({
     label: 'Cache',
     optional: true,
   },
+  defs: {
+    type: Boolean,
+    label: 'Defs',
+    optional: true,
+  },
   mem: {
     type: Object,
     label: "Memory",
