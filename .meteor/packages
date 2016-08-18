@@ -26,6 +26,8 @@ aldeed:collection2
 kuip:schema-graphql-bridge
 dburles:collection-helpers
 
+reywood:publish-composite
+
 kadira:flow-router
 kadira:blaze-layout
 meteorhacks:picker
@@ -37,6 +39,5 @@ accounts-base
 practicalmeteor:mocha
 
 # tmeasday:check-npm-versions
-# reywood:publish-composite
 # reactive-dict
 # simple:rest

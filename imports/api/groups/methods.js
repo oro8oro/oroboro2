@@ -1,22 +1,22 @@
 import { Meteor } from 'meteor/meteor';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
-import Files from './files';
+import Groups from './groups';
 
 
-const filesInsert = new ValidatedMethod({
-  name: 'files.insert',
-  validate: Files.schema.validator(),
+const groupsInsert = new ValidatedMethod({
+  name: 'groups.insert',
+  validate: Groups.schema.validator(),
   run(obj) {
     delete obj._id;
-    let id = Files.insert(obj);
+    let id = Groups.insert(obj);
     console.log('inserted: ' + id);
     return id;
   }
 });
 
-const filesUpdate = new ValidatedMethod({
-  name: 'files.update',
+const groupsUpdate = new ValidatedMethod({
+  name: 'groups.update',
   validate: null,
   run({ id, modifier }) {
     //console.log('updated: ' + id)
@@ -24,24 +24,24 @@ const filesUpdate = new ValidatedMethod({
     //console.log('simulation: ', this.isSimulation)
     //if (!this.isSimulation) {
       //console.log('changing')
-      Files.update({_id: id}, {$set: modifier});
+      Groups.update({_id: id}, {$set: modifier});
     //}
   }
 });
 
-const filesDelete = new ValidatedMethod({
-  name: 'files.delete',
+const groupsDelete = new ValidatedMethod({
+  name: 'groups.delete',
   validate: null,
   run(id) {
     console.log('delete: ' + id)
-    Files.remove(id);
+    Groups.remove(id);
   }
 });
 
 
-export { filesInsert };
-Files.methods = {
-  insert: filesInsert,
-  update: filesUpdate,
-  delete: filesDelete,
+export { groupsInsert };
+Groups.methods = {
+  insert: groupsInsert,
+  update: groupsUpdate,
+  delete: groupsDelete,
 };

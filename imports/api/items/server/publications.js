@@ -16,3 +16,8 @@ Meteor.publish('Items.item', function (id) {
   //console.log('items general: ' + Items.find().count())
   return Items.find({_id: id});
 });
+
+Meteor.publish('Groups.items', function (id) {
+  check(id, String);
+  return Items.find({group: id});
+});

@@ -1,5 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { ReactiveVar } from 'meteor/reactive-var';
+import { FlowRouter } from 'meteor/kadira:flow-router';
 import Oroboro from '../../api/namespace';
 import Items from '../../api/items/items.js';
 import ItemFactory from '../../api/items/ItemFactory';
@@ -146,12 +147,14 @@ Template.OEditor.onCreated(function() {
     items[items.length-1].type = $(e.target).val()
   }
 
-  //this.autorun(() => {
-    this.itemsHandle = this.subscribe('Items.general');
-  //});
+  this.autorun(() => {
+    let file = FlowRouter.getParam('file');
+    if(file)
+      this.fileHandle = this.subscribe('Files.file', file);
+  });
 
   this.autorun(() => {
-    Items.find({}).observe({
+    Items.find({}, {sort: {defs: -1}}).observe({
       added: (doc) => {
         this.addItem(doc);
       }

@@ -3,7 +3,7 @@ import { BlazeLayout } from 'meteor/kadira:blaze-layout';
 import '../../ui/editor/OEditor';
 import '../../ui/history/OHistory';
 
-FlowRouter.route('/editor', {
+FlowRouter.route('/editor/:file', {
   action: function() {
     BlazeLayout.render('OEditor');
   }

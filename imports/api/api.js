@@ -7,10 +7,21 @@ import Dependencies from './dependencies/dependencies';
 import Users from './users/users';
 
 if(Meteor.isServer) {
+  require('./files/server/publications.js');
+  //require('./files/server/routes.js');
+  
+
+  require('./groups/server/publications.js');
+  //require('./groups/server/routes.js');
+  
+
   require('./items/server/publications.js');
   require('./items/server/routes.js');
   require('./items/methods.js');
 }
+
+require('./files/methods.js');
+require('./groups/methods.js');
 
 import './classes.js';
 
