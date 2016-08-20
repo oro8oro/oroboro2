@@ -29,8 +29,8 @@ const groupsUpdate = new ValidatedMethod({
   }
 });
 
-const groupsDelete = new ValidatedMethod({
-  name: 'groups.delete',
+const groupsRemove = new ValidatedMethod({
+  name: 'groups.remove',
   validate: null,
   run(id) {
     console.log('delete: ' + id)
@@ -43,5 +43,5 @@ export { groupsInsert };
 Groups.methods = {
   insert: groupsInsert,
   update: groupsUpdate,
-  delete: groupsDelete,
+  remove: groupsRemove,
 };

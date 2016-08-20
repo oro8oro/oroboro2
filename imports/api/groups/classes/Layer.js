@@ -1,12 +1,19 @@
 import Oroboro from '../../namespace';
-import Common from '../../../utils/Common';
-import '../methods';
+import Group from './Group';
+import ItemGroup from './ItemGroup';
 
+class Layer extends Group {
+  draw() {
+    this._svg = this._parent.group().attr('id', 'Layer_'+this._id);
+    super.draw();
+    return this;
+  }
 
-class Layer extends Common {
-  draw(parent) {
-    this._parent = this._parent || parent;
-    this._svg = parent.group().attr('id', 'Layer_'+this._id);
+  newItemGroup(doc) {
+    let inst = super.newItemGroup(doc) || 
+      new ItemGroup(doc, this._svg, this._file).draw().track();
+    this._groups.set(doc._id, inst);
+    return this;
   }
 }
 

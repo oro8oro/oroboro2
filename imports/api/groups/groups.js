@@ -4,8 +4,8 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 const Groups = new Mongo.Collection('Groups');
 
 let Types = [
-  'Group',
-  'Layer'
+  'Layer',
+  'ItemGroup',
 ];
 
 //['menu', 'menu_item', 'menu_button', 'layer', 'simpleGroup', 'linkedGroup', 'parametrizedGroup']
