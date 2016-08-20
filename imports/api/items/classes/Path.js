@@ -2,11 +2,8 @@ import Item from './Item';
 
 class Path extends Item {
   // pathList -> cache (svg code)
-  constructor(doc) {
-    super(doc);
-    //this._doc = doc;
-    this._id = doc._id;
-    this._svg = null;
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
   }
 
   defaults() {
@@ -18,39 +15,39 @@ class Path extends Item {
   }
 
   setter(doc) {
-    let update = super.setter(doc);
+    let upd = super.setter(doc);
     let { closed, pathArray, palette, selected, locked, cache } = doc;
 
     if(closed) {
       this._closed = closed;
-      update ++;
+      upd ++;
     }
     if(pathArray) {
       this._pathArray = JSON.parse(pathArray);
-      update ++;
+      upd ++;
     }
     if(palette) {
       this._palette = palette;
-      update ++;
+      upd ++;
     }
     if(selected) {
       this._selected = selected;
-      update ++;
+      upd ++;
     }
     if(locked) {
       this._locked = locked;
-      update ++;
+      upd ++;
     }
     if(cache) {
       this._cache = cache;
-      update ++;
+      upd ++;
     }
-    return update
+    return upd
   }
 
-  update({ db }={}) {
+  update(obj) {
     this._svg.plot(this._pathArray);
-    super.update({ db });
+    super.update(obj);
   }
 
   get svg() {
@@ -60,21 +57,20 @@ class Path extends Item {
   refresh(obj) {
     if(obj.pathArray && JSON.stringify(obj.pathArray) != JSON.stringify(this._pathArray)) {
       this._pathArray = obj.pathArray;
-      this.update(false);
+      this.update();
     }
   }
 
-  draw(parent, multi=false) {
-    super.draw(parent);
-    if(!this._svg || multi) {
-      let d = (this._pathArray && this._pathArray[0] && this._pathArray[0].length) ? this._pathArray : 'M 0 0';
-      this._svg = this._parent.path(d)
-        .attr('id', this._id)
-        .opacity(0.6)
-        .stroke({color: '#000', width:1})
-        .fill('#BCBEC0')
-        .draggy();
-    }
+  draw({ draggable=true }={}) {
+    let d = (this._pathArray && this._pathArray[0] && this._pathArray[0].length) ? this._pathArray : 'M 0 0';
+    this._svg = this._parent.path(d)
+      .attr('id', this._id)
+      .opacity(0.6)
+      .stroke({color: '#000', width:1})
+      .fill('#BCBEC0');
+    if(draggable)
+      this._svg.draggy();
+    //this.setListeners();
     return this;
   }
 

@@ -15,9 +15,25 @@ import {
 
 
 class SimpleDialog extends SimplePath {
-  constructor(doc) {
-    super(doc);
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
     this._textId = doc.text;
+  }
+
+  remove(obj) {
+    super.remove(obj);
+    this._text.remove(obj);
+    this._tempGroup.clear();
+  }
+
+  setListeners() {
+    super.setListeners();
+    this.listen('click', (e) => {
+      this._tempGroup.opacity(1);
+    });
+    this.listen('unclick', () => {
+      this._tempGroup.opacity(0);
+    });
   }
 
   pointListToArray(str) {
@@ -36,16 +52,17 @@ class SimpleDialog extends SimplePath {
 
   }
 
-  draw(parent, multi) {
-    this._group = parent.group();
-    super.draw(this._group, multi);
+  draw() {
+    //this._group = this._parent.group();
+    super.draw();
     this.setText();
+    return this;
   }
 
   simple() {
-    if(this.testGroup)
-      this.testGroup.remove();
-    this.testGroup = SVG('OSVGCanvas').group();
+    if(!this._tempGroup)
+      this._tempGroup = this._file._tempSvg.group();
+    this._tempGroup.clear().opacity(0);
     //this.setBoxCorners().simpleBox();
     this.setBoxCorners()
       .roundedBox()
@@ -63,21 +80,21 @@ class SimpleDialog extends SimplePath {
       p4 = pointByAngleDistance(center, getAngle(p2, center), d);
       let { _id, _pointList } = this;
       let self = this;
-      this.testGroup.circle(10).cx(this._pointList[0][0]).cy(this._pointList[0][1])
+      this._tempGroup.circle(10).cx(this._pointList[0][0]).cy(this._pointList[0][1])
         .opacity(0.8).fill('#FF0600')
         .draggy()
         .on('dragmove', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[0] = [ pageX, pageY ];
-          self.update({ db: false });
+          self.update();
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[0] = [ pageX, pageY ];
-          self.update();
+          self.update({ db:true });
         });
       let start, ini, temp;
-      this.testGroup.circle(10).cx(center[0]).cy(center[1])
+      this._tempGroup.circle(10).cx(center[0]).cy(center[1])
         .opacity(0.8).fill('#FF0600')
         .draggy()
         .on('dragstart', function(e) {
@@ -90,7 +107,7 @@ class SimpleDialog extends SimplePath {
           let { pageX, pageY } = e.detail.event;
           _pointList[1] = [ pageX, pageY ];
           _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
-          self.update({ db: false });
+          self.update();
           self._text.dmoveR(pageX - temp[0], pageY - temp[1]);
           temp = [ pageX, pageY ];
         })
@@ -98,20 +115,20 @@ class SimpleDialog extends SimplePath {
           let { pageX, pageY } = e.detail.event;
           _pointList[1] = [ pageX, pageY ];
           _pointList[2] = [ ini[0] + pageX-start[0], ini[1] + pageY-start[1] ];
-          self.update();
+          self.update({ db:true });
         });
-      this.testGroup.circle(10).cx(p1[0]).cy(p1[1])
+      this._tempGroup.circle(10).cx(p1[0]).cy(p1[1])
         .opacity(0.8).fill('#FF0600')
         .draggy()
         .on('dragmove', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[2] = [ pageX, pageY ];
-          self.update({ db: false });
+          self.update();
         })
         .on('dragend', function(e) {
           let { pageX, pageY } = e.detail.event;
           _pointList[2] = [ pageX, pageY ];
-          self.update();
+          self.update({ db:true });
           self.positionText();
         });
       
@@ -212,13 +229,13 @@ class SimpleDialog extends SimplePath {
             [ 'L', pq22[0], pq22[1] ],
         ])
 
-        this.testGroup.circle(7).cx(p1[0]).cy(p1[1]).opacity(0.8).fill('#272822');
-        this.testGroup.circle(7).cx(p2[0]).cy(p2[1]).opacity(0.8).fill('#272822');
-        this.testGroup.circle(7).cx(pq1[0]).cy(pq1[1]).opacity(0.8).fill('#64645C');
-        this.testGroup.circle(7).cx(pq11[0]).cy(pq11[1]).opacity(0.8).fill('#64645C');
-        this.testGroup.circle(7).cx(ph[0]).cy(ph[1]).opacity(0.8).fill('#00B5AD');
-        this.testGroup.circle(7).cx(pq2[0]).cy(pq2[1]).opacity(0.8).fill('#64645C');
-        this.testGroup.circle(7).cx(pq22[0]).cy(pq22[1]).opacity(0.8).fill('#64645C');
+        /*this._tempGroup.circle(7).cx(p1[0]).cy(p1[1]).opacity(0.8).fill('#272822');
+        this._tempGroup.circle(7).cx(p2[0]).cy(p2[1]).opacity(0.8).fill('#272822');
+        this._tempGroup.circle(7).cx(pq1[0]).cy(pq1[1]).opacity(0.8).fill('#64645C');
+        this._tempGroup.circle(7).cx(pq11[0]).cy(pq11[1]).opacity(0.8).fill('#64645C');
+        this._tempGroup.circle(7).cx(ph[0]).cy(ph[1]).opacity(0.8).fill('#00B5AD');
+        this._tempGroup.circle(7).cx(pq2[0]).cy(pq2[1]).opacity(0.8).fill('#64645C');
+        this._tempGroup.circle(7).cx(pq22[0]).cy(pq22[1]).opacity(0.8).fill('#64645C');*/
     }
 
     let l = path[path.length-1].length;
@@ -229,8 +246,7 @@ class SimpleDialog extends SimplePath {
   }
 
   setText() {
-    //this._text = new CubicOpenType(Items.findOne(this._textId));
-    this._text = Oroboro.find(this._textId);
+    this._text = this._file._defs._items.get(this._textId);
     // Avoid showing ugly text in the beginning, before wrap
     this._svgText = this._svg.parent().use(this._text._svg).opacity(0);
     this.positionText();
@@ -331,8 +347,8 @@ class SimpleDialog extends SimplePath {
       //console.log('pos: ', pos)
       //console.log('corner: ', corner)
       //console.log('distMin: ', distMin)
-      this.testGroup.circle(10).cx(box[i+3][1]).cy(box[i+3][2])
-        .opacity(0.8).fill('#0080AB')
+      //this._tempGroup.circle(10).cx(box[i+3][1]).cy(box[i+3][2])
+      //  .opacity(0.8).fill('#0080AB')
       
     });
 
@@ -349,10 +365,21 @@ class SimpleDialog extends SimplePath {
     return this;
   }
 
+  text(text) {
+    if(!text)
+      return this._text._text;
+    this._text.text(text);
+    return this;
+  }
+
 };
 
 export default SimpleDialog;
 Oroboro.classes.SimpleDialog = SimpleDialog;
+Oroboro.api.addDialog = (group, file) => {
+  let obj = Items.methods.addDialog.call({ group, file });
+  return Oroboro.files.get(file).waitOn(obj, SimpleDialog);
+}
 
 /*
 Items.methods.insert.call({

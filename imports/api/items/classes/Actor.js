@@ -5,38 +5,60 @@ import SVG from 'svg.js';
 import 'svg.draggy.js';
 import '../../../utils/connectable.js';
 
+// SimpleActor & XBox Actor
 class Actor extends SimplePath {
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
+  }
+
   setter(doc) {
     let update = super.setter(doc);
     let { parameters } = doc;
 
     if(parameters) {
       if(parameters.bone)
-        this.bone = JSON.parse(parameters.bone);
+        this._bone = JSON.parse(parameters.bone);
       if(parameters.joint)
-        this.joint = JSON.parse(parameters.joint);
+        this._joint = JSON.parse(parameters.joint);
       if(parameters.positions)
-        this.positions = JSON.parse(parameters.positions);
+        this._positions = JSON.parse(parameters.positions);
       if(parameters.head)
-        this.head = parameters.head;
+        this._head = parameters.head;
       update ++;
     }
     return update;
   }
 
-  draw(parent) {
-    let { _pointList, bone, joint, head, onDragStart, onDragMove, onDragEnd } = this;
-    this._svg = this.getSvg(parent).puppet({
+  draw() {
+    let { 
+      _pointList, _bone, _joint, _head, 
+      onDragStart, onDragMove, onDragEnd,
+    } = this;
+
+    this._svg = this._parent.puppet({
       points: _pointList[0],
-      bone,
-      joint,
-      head,
+      bone: _bone,
+      joint: _joint,
+      head: _head,
     }, {
       //onDragStart,
       //onDragMove,
       onDragEnd: (e, delta, type, points) => { this.onDragEnd(e, delta, type, points); }
     });
+    this._svg.hideJoints();
+    this.setListeners();
     return this;
+  }
+
+  setListeners() {
+    super.setListeners();
+    this.listen('click', (e) => {
+      this._svg.showJoints();
+    });
+    this.listen('unclick', () => {
+      console.log('actor unclick')
+      this._svg.hideJoints();
+    });
   }
 
   simple() {
@@ -44,7 +66,7 @@ class Actor extends SimplePath {
   }
 
   // Temporarily, we have to make the _svg a path
-  update({ db=true, modifier={} }={}) {
+  update({ db=false, modifier={} }={}) {
     this._cache = this._svg.node.outerHTML;
     if(db) {
       Items.methods.update.call({ id: this._id, modifier: {
@@ -57,7 +79,18 @@ class Actor extends SimplePath {
     if(!type)
       return;
     this._pointList = [points];
-    this.update();
+    this.update({ db: true });
+    return this;
+  }
+
+  head(url) {
+    if(!url)
+      return this._head;
+    this._head = url;
+    this._svg.setHead(this._head);
+    Items.methods.update.call({ id: this._id, modifier: {
+      'parameters.head': url
+    }});
     return this;
   }
 }
@@ -181,15 +214,7 @@ SVG.Puppet = SVG.invent({
       if (this.points !== undefined){
       this.setBones()
       if(this.head) {
-          this.headItem = this.image(this.head, 100, 100) //.cx(this.joints[4].cx()).cy(this.joints[4].cy()+10)
-          
-          this.modHead();
-          this.headItem.on("mouseover",function(e){
-              this.back()
-          })
-          this.headItem.on("mouseout",function(e){
-              this.front()
-          })
+          this.setHead()
       }
       }
       return this;
@@ -226,6 +251,32 @@ SVG.Puppet = SVG.invent({
         }
         return false;
       });
+    },
+    showJoints() {
+      this.joints.forEach(j => {
+        j.opacity(1);
+      });
+      this.Actor.opacity(1);
+    },
+    hideJoints() {
+      this.joints.forEach(j => {
+        j.opacity(0);
+      });
+      this.Actor.opacity(0);
+    },
+    setHead: function(url) {
+      this.head = url || this.head;
+      if(this.headItem)
+        this.headItem.remove();
+      this.headItem = this.image(this.head, 100, 100);
+      this.modHead();
+      this.headItem
+        .on("mouseover",function(e){
+            this.back()
+        })
+        .on("mouseout",function(e){
+          this.front()
+        });
     },
     modHead: function(self1){ 
       let neckJ, headJ;
@@ -321,7 +372,7 @@ SVG.Puppet = SVG.invent({
   }
 });
 
-/*Human = {
+XboxHuman = {
         standing: [[0,0],[0,150],[0,63],[0,-30],[0,-85],[-63,7],[-85,93],[-80,176],[-78,203],[65,8],[95,93],[82,174],[82,200],[-30,150],[-25,309],[-15,461],[-33,479],[30,150],[27,309],[22,459],[44,476],[0,0],[-74,229],[-104,205],[81,226],[105,199]],
         show: [[0,0],[0,150],[0,63],[0,-30],[0,-85],[-63,7],[-136,21],[-223,-15],[-242,-26],[65,8],[95,93],[82,174],[82,200],[-30,150],[-25,309],[-15,461],[-33,479],[30,150],[27,309],[22,459],[44,476],[0,0],[-261,-37],[-226,-45],[81,226],[105,199]],
         joint: [
@@ -378,25 +429,12 @@ SVG.Puppet = SVG.invent({
             [11,23,10],
             [10,24,5] 
         ]
-}*/
+}
 
-/*Human = {
+SimpleHuman = {
     positions: {
         standing: [
-            [0,0],
-            [0,150],
-            [0,-30],
-            [0,-85],
-
-            [-85,93],
-            [-78,203],
-            [95,93],
-            [82,200],
-
-            [-25,309],
-            [-25,479],
-            [27,309],
-            [27,476],
+            [[200,200],[200,350],[200,170],[200,115],[115,293],[122,403],[295,293],[282,400],[175,509],[175,679],[227,509],[227,676]]
         ],
     },
     joint: [
@@ -430,7 +468,11 @@ SVG.Puppet = SVG.invent({
         [0,9,10],
         [9,10,10]
     ]
-}*/
+}
 
 export default Actor;
 Oroboro.classes.Actor = Actor;
+Oroboro.api.addActor = (group, file) => {
+  let obj = Items.methods.addActor.call({ group, file });
+  return Oroboro.files.get(file).waitOn(obj, Actor);
+}

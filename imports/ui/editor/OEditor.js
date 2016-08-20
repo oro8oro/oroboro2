@@ -2,9 +2,9 @@ import { Meteor } from 'meteor/meteor';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 import Oroboro from '../../api/namespace';
-import Items from '../../api/items/items.js';
-import ItemFactory from '../../api/items/ItemFactory';
-import './OSVGCanvas';
+import Files from '../../api/files/files';
+import SvgFile from '../../api/files/classes/SvgFile';
+
 import './OMenu';
 import './OEditor.html';
 
@@ -13,36 +13,24 @@ Template.OEditor.onCreated(function() {
   this.groups = [];
   this.items = [];
 
-  this.addItem = (doc) => {
-    this.createSVG(doc, this.canvas);
-  }
-
-  this.createSVG = (item, container) => {
-    let obj;
-    if(Oroboro.waitOn[item._id]) {
-      obj = Oroboro.waitOn[item._id];
-      delete Oroboro.waitOn[item._id];
-    }
-    else {
-      obj = ItemFactory(item).draw(container);
-      if(!obj) {
-        console.log('element not inserted');
-        return;
-      }
-    }
-
-    obj._svg.on('click', (e) => {
-      this.setClipboard(obj._svg.attr('id'));
-      this.setSelector(obj);
-    });
-    this.items.push(obj);
-  }
-
-  this.removeSVG = () => {
-    if(this.items)
-      this.items.forEach(i => {
-        i._svg.remove();
-      });
+  this.setSelector = (selected) => {
+    let item = selected.get('item');
+    if(!item)
+      return;
+    Oroboro.selected = this.selected = item;
+    //this.setClipboard(obj._svg.attr('id'));
+    let elem = item._svg,
+      { width, height, x, y } = elem.bbox();
+    
+    if(this.selector)
+      this.selector.remove();
+    this.selector = elem.parent().group()
+      .attr('id', 'selector')
+      .attr('role', 'selector');
+    this.selector.rect(width, height)
+      .x(x).y(y)
+      .stroke({ color: '#000000', width: 1, dasharray: '5,5', opacity: 0.8 })
+      .fill('none');
   }
 
   this.clearSelector = (e) => {
@@ -51,51 +39,10 @@ Template.OEditor.onCreated(function() {
       if(e && $(e.target).attr('role') == this.selector.attr('role'))
         return;
       this.selector.remove();
-      delete this.selector;
+      this._file.clearSelected();
     }
   }
-
-  this.setSelector = (item) => {
-    let elem = item._svg,
-      { width, height, x, y } = elem.bbox(),
-      // Unit
-      u = 20, ud = u/4,
-      // Bottom, right 
-      d = y + height, r = x + width,
-      op = 0.6;
-
-    this.clearSelector();
-    this.selector = elem.parent().group()
-      .attr('id', 'selector')
-      .attr('role', 'selector');
-    this.selector.rect(width, height)
-      .x(x).y(y)
-      .stroke({ color: '#000000', width: 1, dasharray: '5,5', opacity: 0.8 })
-      .fill('none');
-    this.selector.path([ 
-        [ 'M', x + u, d + ud ],
-        [ 'L', x, d + ud + u ],
-        [ 'L', x + u, d + ud + 2*u ],
-        [ 'Z' ]
-      ])
-      .opacity(op)
-      .attr('role', 'selector')
-      .on('click', function(e) {
-        item.undo();
-      });
-    this.selector.path([ 
-        [ 'M', r - u, d + ud ],
-        [ 'L', r, d + ud + u ],
-        [ 'L', r - u, d + ud + 2*u ],
-        [ 'Z' ]
-      ])
-      .opacity(op)
-      .attr('role', 'selector')
-      .on('click', function(e) {
-        item.redo();
-      });
-  }
-
+ 
   this.setClipboard = (text) => {
     this.selectedText = text;
     let textArea = document.createElement("textarea");
@@ -116,7 +63,14 @@ Template.OEditor.onCreated(function() {
     return copysuccess
   }
 
-  this.setNewPath = () => {
+  /*this.setSource = (svgSource) => {
+    ItemFactory({ 
+      type: 'SimplePath', closed: true,
+      cache: svgSource
+    }, SVG(editor));
+  }*/
+
+  /*this.setNewPath = () => {
     ItemFactory({ 
       type: 'SimplePath', closed: true
     }, SVG(this.props.container));
@@ -145,35 +99,37 @@ Template.OEditor.onCreated(function() {
   this.changeType = (e, a) => {
     const { items } = this;
     items[items.length-1].type = $(e.target).val()
-  }
+  }*/
 
   this.autorun(() => {
-    let file = FlowRouter.getParam('file');
-    if(file)
-      this.fileHandle = this.subscribe('Files.file', file);
-  });
-
-  this.autorun(() => {
-    Items.find({}, {sort: {defs: -1}}).observe({
-      added: (doc) => {
-        this.addItem(doc);
-      }
-    });
-    Items.find({}).observeChanges({
-      changed: (id, fields) => {
-        let item = Oroboro.find(id);
-        if(item)
-          item.refresh(fields);
-      }
-    });
+    this._fileId = FlowRouter.getParam('file');
+    if(this._fileId) {
+      this.handleDefs = this.subscribe('Files.SvgFile.defs', this._fileId);
+      this.handleNoDefs = this.subscribe('Files.SvgFile.nodefs', this._fileId);
+    }
   });
 
   Oroboro.elem = this.items;
 });
 
+Template.OEditor.helpers({
+  editor: function() {
+    return Template.instance();
+  }
+});
+
 Template.OEditor.onRendered(function() {
   this.editor = SVG('OEditor');
-  this.canvas = SVG('OSVGCanvas');
+
+  this.autorun(() => {
+    Files.find({ _id: this._fileId }).observe({
+      added: (doc) => {
+        this._file = new SvgFile(
+          doc, this.editor, null, this.handleDefs, this.handleNoDefs
+        ).onSelected(this.setSelector);
+      }
+    });
+  });
 });
 
 Template.OEditor.events({

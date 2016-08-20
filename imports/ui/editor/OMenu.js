@@ -23,19 +23,20 @@ Template.OMenu.helpers({
 
 Template.OMenu.events({
   'click #deleteButton': (e, inst) => {
-
+    let { editor } = Template.currentData();
+    if(editor.selected) {
+      editor.selected.remove({ db:true });
+      editor.clearSelector();
+    }
   },
   'click #freePath': (e, inst) => {
 
   },
   'change #svgInput': (e, inst) => {
     let svgSource = $(e.target).val(),
-      editor = Template.currentData().editor;
+      { editor } = Template.currentData();
     if(!svgSource)
       return;
-    ItemFactory({ 
-      type: 'SimplePath', closed: true,
-      cache: svgSource
-    }, SVG(editor));
+    //editor.setSource(svgSource);
   }
 });

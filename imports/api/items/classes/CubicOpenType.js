@@ -7,8 +7,8 @@ import {
   wrapText } from '../../../utils/svgUtils';
 
 class CubicOpenType extends CubicPath {
-  constructor(doc) {
-    super(doc);
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
     let self = this;
 
     this._OpenType = null;
@@ -34,30 +34,30 @@ class CubicOpenType extends CubicPath {
   }
 
   setter(doc) {
-    let update = super.setter(doc);
+    let upd = super.setter(doc);
     let { parameters, text, font, pointList } = doc;
     if(parameters) {
       this._url = parameters.url;
-      update ++;
+      upd ++;
     }
     if(text) {
       this._text = text;
-      update ++;
+      upd ++;
     }
     if(font) {
       this._font = font;
-      update ++;
+      upd ++;
     }
     if(pointList) {
-      this._pointList = pointList;
-      update ++;
+      this._pointList = JSON.parse(pointList);
+      upd ++;
     }
-    return update;
+    return upd;
   }
 
-  draw(parent, multi) {
+  draw() {
     // Draw a default path first
-    super.draw(parent, multi);
+    super.draw({ draggable: false });
     this._svg.stroke({width: 0}).fill('#000000');
 
     // Load font and draw the real path
@@ -69,7 +69,7 @@ class CubicOpenType extends CubicPath {
         self._pointList[1], 
         self._font.size);
       self.OpenTypeToCubic(path.commands)
-        .update({ db:false });
+        .update();
     });
     return this;
   }
@@ -130,6 +130,9 @@ class CubicOpenType extends CubicPath {
       type='left',
       text = this._text,
       fontSize = this._font.size;
+    this._width = w;
+    this._height = h;
+    this._callback = callb;
     //type = 'center';
     //type = 'right';
     this.textSize(text, fontSize).then(function(size) {
@@ -225,11 +228,20 @@ class CubicOpenType extends CubicPath {
   textSize(text, fontSize) {
     let self = this;
     return this.textToCubic(text, fontSize).then(function(path) {
-      let p = self.tempSvg.path(path);
+      let p = self._file._tempSvg.path(path);
       let { width, height } = p.bbox();
       p.remove();
       return { width, height };
     });
+  }
+
+  text(text, w, h, callb) {
+    if(!text)
+      return this._text;
+    this._text = text;
+    this.wrap(w || this._width, h || this._height, callb || this._callback);
+    this.rawUpdate({ text });
+    return this;
   }
 };
 

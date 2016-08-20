@@ -4,17 +4,23 @@ if(Meteor.isClient) {
 }
 
 class Common {
-  constructor(doc) {
-
+  constructor(doc, parent, file) {
+    this._id = doc._id;
     // Set defaults
     this.setter(this.defaults());
     // Set actual data
     this.setter(doc);
 
-    this._listeners = {}
-    // Utility group, for calculating diverse things
-    this._tempSvg = SVG('OSVGCanvas').group().attr('id', 'tempSvg');
-    this._defs = SVG('OSVGCanvas').defs();
+    this._listeners = new Map();
+
+    if(parent) {
+      if(this._indefs && this._defs)
+        this._parent = this._defs;
+      else
+        this._parent = this.getSvg(parent);
+    }
+    if(file)
+      this._file = file;
   }
 
   defaults() {
@@ -28,8 +34,8 @@ class Common {
   }
 
   setter(doc) {
-    let { mem, defs } = doc,
-      update = 0;
+    let { mem, defs, ordering } = doc,
+      upd = 0;
 
     // History
     if(mem) {
@@ -40,28 +46,33 @@ class Common {
       // Actions before it are "undos"
       if(mem.index)
         this._memI = mem.index;
-      update ++;
+      upd ++;
     }
     if(defs) {
       this._indefs = defs;
-      update ++;
+      upd ++;
     }
-    return update;
-  }
-
-  draw(parent) {
-    if(this._indefs)
-      this._parent = this._defs;
-    else
-      this._parent = this.getSvg(parent || this._parent);
-    return this;
+    if(ordering) {
+      this._ordering = ordering;
+      upd ++;
+    }
+    return upd;
   }
 
   // We receive the db object after a fresh update 
   refresh(obj) {
     let updates = this.setter(obj);
+    console.log('refresh')
     if(updates)
-      this.update({ db: false });
+      this.update();
+  }
+
+  remove() {
+    this._svg.remove();
+  }
+
+  draw() {
+    this.setListeners();
   }
 
   get tempSvg() {
@@ -99,7 +110,7 @@ class Common {
     // Run the "do" function +/- update (updates the db)
     if(run) {
       this[name](...up);
-      this.update(update);
+      this.update({ db: update });
     }
   }
 
@@ -107,7 +118,7 @@ class Common {
     // Get last action that can be undone and decrease index
     let act = this._mem[this._memI --];
     this[act.name](...act.down);
-    this.update(update);
+    this.update({ db: update });
     return this;
   }
 
@@ -115,7 +126,7 @@ class Common {
     // Increase index and get first action that can be redone
     let act = this._mem[++ this._memI];
     this[act.name](...act.up);
-    this.update(update);
+    this.update({ db: update });
     return this;
   }
 
@@ -134,15 +145,24 @@ class Common {
     };
   }
 
-   addListener(type, func) {
-    if(!this._listeners[type])
-      return;
-    this._listeners[type].push(func);
+   listen(type, func) {
+    if(!this._listeners.has(type))
+      this._listeners.set(type, []);
+    this._listeners.get(type).push(func);
+    this._svg.on(type, (e) => {
+      this.callListeners(type, e);
+    });
   }
 
-  callListeners(type, event, svg, inst) {
-    this._listeners[type].forEach(f => {
-      f(event, svg, inst);
+  callListeners(type, event) {
+    this._listeners.get(type).forEach(f => {
+      f(event);
+    });
+  }
+
+  setListeners() {
+    this.listen('click', (e) => {
+      this._file.select(this);
     });
   }
 

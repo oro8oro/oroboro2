@@ -3,8 +3,8 @@ import Item from './Item';
 import CubicPath from './CubicPath';
 
 class SimplePath extends CubicPath {
-  constructor(doc) {
-    super(doc);
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
     let { pointList, parameters={} } = doc;
     this._pointList = this.pointListToArray(pointList);
     //
@@ -24,12 +24,12 @@ class SimplePath extends CubicPath {
 
   set type(type) {
     this._transform = type;
-    this.update();
+    this.update({ db:true });
   }
 
-  update({ db }={}) {
+  update(obj) {
     this._pathArray = this[this._transform]();
-    super.update({ db });
+    super.update(obj);
   }
 
   updateModifier() {
@@ -43,14 +43,14 @@ class SimplePath extends CubicPath {
     this._pointList = this._pointList.map(subpath => {
       return subpath.map(p => [p[0] + dx, p[1] + dy]);
     });
-    this.update();
+    this.update({ db:true });
     return this;
   }
 
   add(p) {
     const { _pointList } = this;
     _pointList[_pointList.length-1].push(p);
-    this.update();
+    this.update({ db:true });
     return this;
   }
 

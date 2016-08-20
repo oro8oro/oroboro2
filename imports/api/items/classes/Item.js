@@ -3,38 +3,56 @@ import absolutize from 'abs-svg-path';
 import Oroboro from '../../namespace';
 import Common from '../../../utils/Common';
 import Items from '../items';
-import ItemFactory from '../ItemFactory';
 import * as utils from '../../../utils/svgUtils';
 
 import '../methods';
 
 class Item extends Common {
-  constructor(doc) {
-    super(doc)
-    this._listeners = {
-      click: [],
-      dragstart: [],
-      dragmove: [],
-      dragend: []
-    };
+  constructor(doc, parent, file) {
+    super(doc, parent, file);
   }
 
-  update({ db=true, modifier={} }) {
+  setter(doc) {
+    let update = super.setter(doc);
+    let { group } = doc;
+    if(group) {
+      this._group = group;
+      update ++;
+    }
+    return update;
+  }
+
+  update({ db=false, modifier={} }={}) {
     this._cache = this._svg.node.outerHTML;
+    //console.log('update db: ', db)
     if(db) {
       Items.methods.update.call({ id: this._id, modifier: Object.assign(modifier, this.updateModifier())});
       console.log('item db updated')
     }
   }
 
-  remove() {
-    this._svg.remove();
-    Item.remove(this._id);
+  rawUpdate(modifier) {
+    Items.methods.update.call({ id: this._id, modifier });
+  }
+
+  remove({ db=false }={}) {
+    super.remove();
+    if(db)
+      Items.methods.remove.call(this._id);
+  }
+
+  clone(groupId) {
+    let obj = Items.methods.clone.call(this._id, groupId);
+    if(parent) {
+      let item = Item.factory(obj, parent).draw();
+      Oroboro.waitOn[obj._id] = item;
+      return item;
+    }
   }
 
   static insert(obj, parent) {
     if(obj.cache && !obj.pointList && !obj.pathArray) {
-      let res = Item.svgToPathArray(obj.cache, parent);
+      let res = Item.svgToPathArray(obj.cache);
       //console.log(res)
       obj.pathArray = res.pathArray;
       obj.pointList = res.pointList;
@@ -51,19 +69,17 @@ class Item extends Common {
       return;
 
     obj._id = Items.methods.insert.call(obj);
-    let item = ItemFactory(obj).draw(parent);
-    Oroboro.waitOn[obj._id] = item;
-    return item;
-  }
-
-  static delete(id) {
-    Item.methods.delete.call(id);
+    if(parent) {
+      let item = Item.factory(obj, parent).draw();
+      Oroboro.waitOn[obj._id] = item;
+      return item;
+    }
   }
 
   // Transform svg source for 
   // line, polyline, polygon, rect, circle, ellipse to path
-  static svgToPathArray(source, parent) {
-    let tempG = parent.group().svg(source),
+  static svgToPathArray(source) {
+    let tempG = SVG('OSVGCanvas').group().svg(source),
       temp = tempG.first(),
       typ = temp.type + 'ToPath',
       pathArray;
@@ -104,6 +120,14 @@ class Item extends Common {
       });
     });
     return !notvalid;
+  }
+
+  static factory(obj, parent, file) {
+    if(!Oroboro.classes[obj.type])
+      throw new Oroboro.Error('undefined-class', `There is no <${obj.type}> class.`);
+    if(obj._id)
+      return new Oroboro.classes[obj.type](obj, parent, file);
+    return Item.insert(obj, parent, file);
   }
 }
 
