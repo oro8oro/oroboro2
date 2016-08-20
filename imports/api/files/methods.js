@@ -15,6 +15,20 @@ const filesInsert = new ValidatedMethod({
   }
 });
 
+const filesClone = new ValidatedMethod({
+  name: 'files.clone',
+  validate: null,
+  run(id) {
+    let obj = Files.findOne(id);
+    if(!obj)
+      return;
+    delete obj._id;
+    id = Files.insert(obj);
+    console.log('inserted: ' + id);
+    return id;
+  }
+});
+
 const filesUpdate = new ValidatedMethod({
   name: 'files.update',
   validate: null,
@@ -29,8 +43,8 @@ const filesUpdate = new ValidatedMethod({
   }
 });
 
-const filesDelete = new ValidatedMethod({
-  name: 'files.delete',
+const filesRemove = new ValidatedMethod({
+  name: 'files.remove',
   validate: null,
   run(id) {
     console.log('delete: ' + id)
@@ -38,10 +52,9 @@ const filesDelete = new ValidatedMethod({
   }
 });
 
-
-export { filesInsert };
 Files.methods = {
   insert: filesInsert,
   update: filesUpdate,
-  delete: filesDelete,
+  remove: filesRemove,
+  clone: filesClone,
 };

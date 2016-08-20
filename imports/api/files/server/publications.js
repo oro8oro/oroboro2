@@ -5,26 +5,58 @@ import Files from '../files';
 import Groups from '../../groups/groups';
 import Items from '../../items/items';
 
-Meteor.publishComposite('Files.file', function (id) {
-  console.log('Files.file', id)
+let rate = {
+  disableOplog: true,
+  pollingIntervalMs: 100, // default 10 milisec
+  pollingThrottleMs: 100,// default 50 milisec
+}
+
+Meteor.publishComposite('Files.SvgFile.defs', function (id) {
   check(id, String);
 
   return {
     find: function() {
-      console.log(Files.findOne({_id: id}))
       return Files.find({_id: id});
     },
     children: [
       {
         find: function(f) {
-          console.log('groups', Groups.find({_id: {$in: f.groups}}).count())
-          return Groups.find({_id: {$in: f.groups}});
+          return Groups.find({_id: {$in: f.groups}, defs: true});
         }
       },
       {
         find: function(f) {
-          console.log('items', Items.find({_id: {$in: f.items}}).count())
-          return Items.find({_id: {$in: f.items}});
+          return Items.find({_id: {$in: f.items}, defs: true});
+        }
+      }
+    ]
+  }
+});
+
+Meteor.publishComposite('Files.SvgFile.nodefs', function (id) {
+  check(id, String);
+
+  return {
+    find: function() {
+      return Files.find({_id: id});
+    },
+    children: [
+      {
+        find: function(f) {
+          console.log('Groups changed')
+          return Groups.find({
+            _id: {$in: f.groups}, 
+            $or: [ {defs: {$exists: 0}}, {defs: false} ]
+          });
+        }
+      },
+      {
+        find: function(f) {
+          console.log('Items changed')
+          return Items.find({
+            _id: {$in: f.items}, 
+            $or: [ {defs: {$exists: 0}}, {defs: false} ]
+          });
         }
       }
     ]
