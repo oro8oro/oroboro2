@@ -37,6 +37,6 @@ Template.OMenu.events({
       { editor } = Template.currentData();
     if(!svgSource)
       return;
-    //editor.setSource(svgSource);
+    editor.setSource(svgSource);
   }
 });

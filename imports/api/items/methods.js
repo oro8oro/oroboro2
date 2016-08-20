@@ -7,8 +7,10 @@ import Files from '../files/files';
 
 const itemsInsert = new ValidatedMethod({
   name: 'items.insert',
-  validate: Items.schema.validator(),
-  run(obj, fileId) {
+  validate: null,
+  run({ obj, fileId }) {
+    if(!fileId)
+      throw new Meteor.Error('Items.methods.insert.noFileId', 'Must provide file id.');
     delete obj._id;
     let id = Items.insert(obj);
     console.log('inserted: ' + id);

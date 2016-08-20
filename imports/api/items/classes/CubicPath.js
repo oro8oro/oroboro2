@@ -80,7 +80,7 @@ class CubicPath extends Path {
     let item = Item.insert({
       type: 'CubicPath', closed: true,
       pathArray: JSON.stringify(p.array().value),
-    }, this._svg.parent());
+    }, this._svg.parent(), this._file);
     p.remove();
     return item;
   }

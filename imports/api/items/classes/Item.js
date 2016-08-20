@@ -50,9 +50,9 @@ class Item extends Common {
     }
   }
 
-  static insert(obj, parent) {
+  static insert(obj, parent, file) {
     if(obj.cache && !obj.pointList && !obj.pathArray) {
-      let res = Item.svgToPathArray(obj.cache);
+      let res = Item.svgToPathArray(obj.cache, parent);
       //console.log(res)
       obj.pathArray = res.pathArray;
       obj.pointList = res.pointList;
@@ -67,19 +67,17 @@ class Item extends Common {
     // Be sure we have a valid path
     if(!Item.validate(typeof obj.pathArray == 'string' ? JSON.parse(obj.pathArray) : obj.pathArray))
       return;
-
-    obj._id = Items.methods.insert.call(obj);
+    obj._id = Items.methods.insert.call({ obj, fileId: file._id });
     if(parent) {
-      let item = Item.factory(obj, parent).draw();
-      Oroboro.waitOn[obj._id] = item;
+      let item = Item.factory(obj, parent, file).draw();
       return item;
     }
   }
 
   // Transform svg source for 
   // line, polyline, polygon, rect, circle, ellipse to path
-  static svgToPathArray(source) {
-    let tempG = SVG('OSVGCanvas').group().svg(source),
+  static svgToPathArray(source, parent) {
+    let tempG = parent.group().svg(source),
       temp = tempG.first(),
       typ = temp.type + 'ToPath',
       pathArray;

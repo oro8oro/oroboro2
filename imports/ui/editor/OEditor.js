@@ -63,12 +63,9 @@ Template.OEditor.onCreated(function() {
     return copysuccess
   }
 
-  /*this.setSource = (svgSource) => {
-    ItemFactory({ 
-      type: 'SimplePath', closed: true,
-      cache: svgSource
-    }, SVG(editor));
-  }*/
+  this.setSource = (svgSource) => {
+    this._file.setSource(svgSource);
+  }
 
   /*this.setNewPath = () => {
     ItemFactory({ 

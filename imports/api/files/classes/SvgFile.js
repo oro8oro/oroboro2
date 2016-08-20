@@ -130,6 +130,21 @@ class SvgFile extends CompositeFile {
     this._selected.clear();
     return this;
   }
+
+  setSource(svgSource) {
+    console.log(svgSource)
+    let group = this._selected.get('group') || this._selected.get('layer');
+    // Do not insert if there is nothing selected
+    if(!group)
+      return;
+    let inst = Item.factory({ 
+      type: 'CubicPath', closed: true,
+      cache: svgSource,
+      group: group._id,
+    }, this._svg, this);
+    this._waitOn.set(inst._id, inst);
+    return inst;
+  }
 }
 
 export default SvgFile;
