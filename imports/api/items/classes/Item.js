@@ -38,7 +38,7 @@ class Item extends Common {
   remove({ db=false }={}) {
     super.remove();
     if(db)
-      Items.methods.remove.call(this._id);
+      Items.methods.remove.call({ id:this._id, fileId: this._file._id });
   }
 
   clone(groupId) {

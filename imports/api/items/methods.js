@@ -66,9 +66,16 @@ const itemsUpdate = new ValidatedMethod({
 const itemsRemove = new ValidatedMethod({
   name: 'items.remove',
   validate: null,
-  run(id) {
+  run({ id, fileId }) {
     console.log('delete: ' + id)
     Items.remove(id);
+    if(fileId && !this.isSimulation) {
+      Files.update({ 
+        _id: fileId 
+      }, {
+        $pull: { 'items': id }
+      });
+    }
   }
 });
 
