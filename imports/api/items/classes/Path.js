@@ -54,13 +54,6 @@ class Path extends Item {
     return this._svg;
   }
 
-  refresh(obj) {
-    if(obj.pathArray && JSON.stringify(obj.pathArray) != JSON.stringify(this._pathArray)) {
-      this._pathArray = obj.pathArray;
-      this.update();
-    }
-  }
-
   draw({ draggable=true }={}) {
     let d = (this._pathArray && this._pathArray[0] && this._pathArray[0].length) ? this._pathArray : 'M 0 0';
     this._svg = this._parent.path(d)

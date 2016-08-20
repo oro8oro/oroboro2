@@ -112,10 +112,14 @@ class SvgFile extends CompositeFile {
       this._selected.set('item', inst);
       this._onSelected(this._selected);
     }
-    else if(inst instanceof ItemGroup)
+    else if(inst instanceof ItemGroup) {
       this._selected.set('group', inst);
-    else if(inst instanceof Layer)
+      console.log('selected group: ', inst._id);
+    }
+    else if(inst instanceof Layer) {
       this._selected.set('layer', inst);
+      console.log('selected layer: ', inst._id);
+    }
     return this;
   }
 
@@ -125,8 +129,11 @@ class SvgFile extends CompositeFile {
   }
 
   clearSelected() {
-    if(this._selected.has('item'))
-      this._selected.get('item').callListeners('unclick');
+    if(this._selected.has('item')) {
+      let inst = this._selected.get('item');
+      if(inst._listeners.has('unclick'))
+        inst.callListeners('unclick');
+    }
     this._selected.clear();
     return this;
   }
