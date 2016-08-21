@@ -2,6 +2,7 @@ import opentype from 'opentype.js';
 
 import Oroboro from '../../namespace';
 import CubicPath from './CubicPath';
+import Items from '../items';
 
 import { 
   wrapText } from '../../../utils/svgUtils';
@@ -38,6 +39,8 @@ class CubicOpenType extends CubicPath {
     let { parameters, text, font, pointList } = doc;
     if(parameters) {
       this._url = parameters.url;
+      this._width = parameters.width;
+      this._height = parameters.height;
       upd ++;
     }
     if(text) {
@@ -57,20 +60,23 @@ class CubicOpenType extends CubicPath {
 
   draw() {
     // Draw a default path first
-    super.draw({ draggable: false });
+    super.draw({ draggable: !this._indefs });
     this._svg.stroke({width: 0}).fill('#000000');
-
-    // Load font and draw the real path
-    let self = this;
-    this._promise.then(function(font) {
-      let path = font.getPath(
-        self._text, 
-        self._pointList[0], 
-        self._pointList[1], 
-        self._font.size);
-      self.OpenTypeToCubic(path.commands)
-        .update();
-    });
+    /*if(this._indefs) {
+      // Load font and draw the real path
+      let self = this;
+      this._promise.then(function(font) {
+        let path = font.getPath(
+          self._text, 
+          self._pointList[0], 
+          self._pointList[1], 
+          self._font.size);
+        self.OpenTypeToCubic(path.commands)
+          .update();
+      });
+    }*/
+    //else
+    //  this.wrap();
     return this;
   }
 
@@ -126,6 +132,7 @@ class CubicOpenType extends CubicPath {
   }
 
   wrap(w, h, callb) {
+    //console.log('wrap', this._width, this._height, w, h, this._text);
     let self = this, _size,
       type='left',
       text = this._text,
@@ -186,7 +193,7 @@ class CubicOpenType extends CubicPath {
     let self = this,
       len = text.length,
       w = size.width,
-      hspace = len < 1000 ? (size.height/2) : (size.height*3/2),
+      hspace = len < 1000 ? (size.height) : (size.height*3/2),
       h = size.height + hspace;
     //console.log('width: ', w);
     // Utopic number of lines of text
@@ -208,10 +215,10 @@ class CubicOpenType extends CubicPath {
       //console.log(r)
 
       if(!fontSize)
-        this._font.size *= r;
-      fontSize = fontSize ? (fontSize * r) : this._font.size;
+        this._font.size = this._font.size*r-2;
+      fontSize = fontSize ? (fontSize * r-2) : this._font.size;
 
-      lines = this.wrapToWidth(w2, charW * r, text);
+      lines = this.wrapToWidth(w2-20, charW * r, text);
     }
 
     return { lines, width: w2 };
@@ -247,6 +254,27 @@ class CubicOpenType extends CubicPath {
 
 export default CubicOpenType;
 Oroboro.classes.CubicOpenType = CubicOpenType;
+
+Oroboro.api.addCaption = (text, file, group) => {
+  let inst = Oroboro.files.get(file);
+  if(!group)
+    group = inst._selected.get('group');
+  if(!group)
+    return;
+  let obj = {
+    type: 'CubicOpenType',
+    text,
+    group: group._id,
+    pointList: '[200,900]',
+    parameters: {
+      url: '/fonts/FiraSansOT-Medium.otf',
+      width: 1024,
+      height: 200,
+    },
+  }
+  obj._id = Items.methods.insert.call({ obj, fileId: file });
+  return inst.waitOn(obj, CubicOpenType);
+}
 
 /*
 Items.methods.insert.call({

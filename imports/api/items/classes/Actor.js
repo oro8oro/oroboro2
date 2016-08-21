@@ -472,7 +472,12 @@ SimpleHuman = {
 
 export default Actor;
 Oroboro.classes.Actor = Actor;
-Oroboro.api.addActor = (group, file) => {
+Oroboro.api.addActor = (file, group) => {
+  let inst = Oroboro.files.get(file);
+  if(!group)
+    group = inst._selected.get('group');
+  if(group)
+    group = group._id;
   let obj = Items.methods.addActor.call({ group, file });
   return Oroboro.files.get(file).waitOn(obj, Actor);
 }

@@ -376,7 +376,12 @@ class SimpleDialog extends SimplePath {
 
 export default SimpleDialog;
 Oroboro.classes.SimpleDialog = SimpleDialog;
-Oroboro.api.addDialog = (group, file) => {
+Oroboro.api.addDialog = (file, group) => {
+  let inst = Oroboro.files.get(file);
+  if(!group)
+    group = inst._selected.get('group');
+  if(group)
+    group = group._id;
   let obj = Items.methods.addDialog.call({ group, file });
   return Oroboro.files.get(file).waitOn(obj, SimpleDialog);
 }
