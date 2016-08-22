@@ -8,7 +8,7 @@ import Users from './users/users';
 
 if(Meteor.isServer) {
   require('./files/server/publications.js');
-  //require('./files/server/routes.js');
+  require('./files/server/routes.js');
   
 
   require('./groups/server/publications.js');

@@ -26,7 +26,7 @@ class Item extends Common {
     this._cache = this._svg.node.outerHTML;
     //console.log('update db: ', db)
     if(db) {
-      Items.methods.update.call({ id: this._id, modifier: Object.assign(modifier, this.updateModifier())});
+      Items.methods.update.call({ id: this._id, modifier: Object.assign(modifier, this.updateModifier()), file: this._file._id, fileCache: this._file._svg.svg() });
       console.log('item db updated')
     }
   }

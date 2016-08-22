@@ -28,18 +28,19 @@ const itemsInsert = new ValidatedMethod({
 const itemsClone = new ValidatedMethod({
   name: 'items.clone',
   validate: null,
-  run(id, groupId, fileId) {
+  run({ id, group, file }) {
+    console.log('clone - group: ', group);
     let obj = Items.findOne(id);
     if(!obj)
       return;
     delete obj._id;
     obj.original = id;
-    if(groupId)
-      obj.group = groupId;
+    if(group)
+      obj.group = group;
     obj._id = Items.insert(obj);
     if(!this.isSimulation) {
       Files.update({ 
-        _id: fileId 
+        _id: file 
       }, {
         $addToSet: { 'items': obj._id }
       });
@@ -52,14 +53,22 @@ const itemsClone = new ValidatedMethod({
 const itemsUpdate = new ValidatedMethod({
   name: 'items.update',
   validate: null,
-  run({ id, modifier }) {
+  run({ id, modifier, file, fileCache }) {
     //console.log('updated: ' + id)
-    console.log('modifier: ', modifier)
+    //console.log('modifier: ', modifier)
     //console.log('simulation: ', this.isSimulation)
     //if (!this.isSimulation) {
       //console.log('changing')
       Items.update({_id: id}, {$set: modifier});
     //}
+
+    if(!this.isSimulation && file && fileCache) {
+      Files.update({ 
+        _id: file 
+      }, {
+        $set: { cache: fileCache }
+      });
+    }
   }
 });
 
