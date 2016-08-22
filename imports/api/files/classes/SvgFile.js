@@ -97,8 +97,9 @@ class SvgFile extends CompositeFile {
   track() {
     this._tracker = Tracker.autorun(() => {
       if(this._handleNoDefs.ready()) {
-        Groups.find(this._query).observe({
+        Groups.find(this._query, {sort: {ordering: 1}}).observe({
           added: (doc) => {
+            //console.log(doc._id, doc.ordering);
             this.newLayer(doc);
           }
         });

@@ -5,6 +5,7 @@ import ItemGroup from './ItemGroup';
 class Layer extends Group {
   draw() {
     this._svg = this._parent.group().attr('id', 'Layer_'+this._id);
+    this._svg.attr('ordering', this._ordering);
     super.draw();
     return this;
   }

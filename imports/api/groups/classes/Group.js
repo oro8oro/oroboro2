@@ -27,6 +27,16 @@ class Group extends Common {
     };
   }
 
+  /*setter(doc) {
+    let upd = super.setter(doc);
+    let { ordering } = doc;
+    if(ordering || ordering == 0) {
+      this._ordering = ordering;
+      upd ++;
+    }
+    return upd;
+  }*/
+
   remove({ db=false }={}) {
     super.remove();
     if(db)
@@ -75,7 +85,7 @@ class Group extends Common {
 
   track() {
     this._tracker = Tracker.autorun(() => {
-      Groups.find(this._query).observe({
+      Groups.find(this._query, {sort: {ordering: 1}}).observe({
         added: (doc) => {
           this.newItemGroup(doc);
         },
@@ -88,7 +98,7 @@ class Group extends Common {
           this.changedItemGroup(id, fields);
         }
       });
-      Items.find(this._query).observe({
+      Items.find(this._query, {sort: {ordering: 1}}).observe({
         added: (doc) => {
           this.newItem(doc);
         },

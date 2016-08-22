@@ -4,6 +4,7 @@ import Group from './Group';
 class ItemGroup extends Group {
   draw() {
     this._svg = this._parent.group().attr('id', 'ItemGroup_'+this._id);
+    this._svg.attr('ordering', this._ordering);
     super.draw();
     return this;
   }
