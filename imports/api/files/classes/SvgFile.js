@@ -145,18 +145,31 @@ class SvgFile extends CompositeFile {
   }
 
   setSource(svgSource) {
-    console.log(svgSource)
-    let group = this._selected.get('group') || this._selected.get('layer');
+    //console.log(svgSource)
+    let group = this._selected.get('layer') || this._selected.get('group');
     // Do not insert if there is nothing selected
     if(!group)
       return;
-    let inst = Item.factory({ 
+    let tempG = this._svg.group().svg(svgSource),
+      self = this;
+    tempG.each(function(i) {
+      let inst = Item.factory({ 
+        type: 'CubicPath', closed: true,
+        cache: this.svg(),
+        group: group._id,
+      }, self._svg, self);
+      self._waitOn.set(inst._id, inst);
+    });
+    tempG.remove();
+    return this;
+
+    /*let inst = Item.factory({ 
       type: 'CubicPath', closed: true,
       cache: svgSource,
       group: group._id,
     }, this._svg, this);
     this._waitOn.set(inst._id, inst);
-    return inst;
+    return inst;*/
   }
 }
 
