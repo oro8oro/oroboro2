@@ -29,8 +29,9 @@ Template.OMenu.events({
       editor.clearSelector();
     }
   },
-  'click #freePath': (e, inst) => {
-
+  'click #addFile': (e, inst) => {
+    let { editor } = Template.currentData();
+    editor.addFile();
   },
   'change #svgInput': (e, inst) => {
     let svgSource = $(e.target).val(),

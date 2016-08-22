@@ -67,6 +67,11 @@ Template.OEditor.onCreated(function() {
     this._file.setSource(svgSource);
   }
 
+  this.addFile = () => {
+    let id = Oroboro.api.addComic();
+    window.open('/editor/'+id, '_blank');
+  }
+
   /*this.setNewPath = () => {
     ItemFactory({ 
       type: 'SimplePath', closed: true
@@ -124,6 +129,7 @@ Template.OEditor.onRendered(function() {
         this._file = new SvgFile(
           doc, this.editor, null, this.handleDefs, this.handleNoDefs
         ).onSelected(this.setSelector);
+        Oroboro.inEdit = this._file;
       }
     });
   });

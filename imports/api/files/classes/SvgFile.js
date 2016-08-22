@@ -6,6 +6,11 @@ import Item from '../../items/classes/Item';
 import Defs from '../../groups/classes/Defs';
 import Layer from '../../groups/classes/Layer';
 import ItemGroup from '../../groups/classes/ItemGroup';
+import Files from '../files';
+import Items from '../../items/items';
+import '../methods';
+import '../../groups/methods';
+import '../../items/methods';
 
 class SvgFile extends CompositeFile {
   constructor(doc, parent, layers, handleDefs, handleNoDefs) {
@@ -156,3 +161,30 @@ class SvgFile extends CompositeFile {
 
 export default SvgFile;
 Oroboro.classes.SvgFile = SvgFile;
+
+Oroboro.api.addComic = () => {
+  // file id
+  let file = Files.methods.insert.call({
+      fileType: 'image/svg+xml',
+      "width" : 1448,
+      "height" : 1024,
+    });
+  // group id
+  let group0 = Groups.methods.insert.call({
+    obj: {
+      file,
+      type : "Layer",
+      ordering : 0,
+    }, file
+  });
+  let group1 = Groups.methods.insert.call({
+    obj: {
+      file,
+      type : "Layer",
+      ordering : 1,
+    }, file
+  });
+  let obj1 = Items.methods.clone.call({ id: 'gB5S2EPiscf9aanWw', group: group0, file });
+  let obj2 = Items.methods.addActor.call({ group: group1, file });
+  return file;
+}

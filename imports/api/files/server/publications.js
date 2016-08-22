@@ -11,6 +11,10 @@ let rate = {
   pollingThrottleMs: 100,// default 50 milisec
 }
 
+Meteor.publish('Files.general', function () {
+  return Files.find({});
+});
+
 Meteor.publishComposite('Files.SvgFile.defs', function (id) {
   check(id, String);
 
