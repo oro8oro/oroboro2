@@ -2,14 +2,24 @@ import { Meteor } from 'meteor/meteor';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import Groups from './groups';
+import Files from '../files/files';
 
 
 const groupsInsert = new ValidatedMethod({
   name: 'groups.insert',
-  validate: Groups.schema.validator(),
-  run(obj) {
+  validate: null,
+  run({ obj, file }) {
     delete obj._id;
     let id = Groups.insert(obj);
+
+    if(!this.isSimulation) {
+      Files.update({ 
+        _id: file 
+      }, {
+        $addToSet: { 'groups': id }
+      });
+    }
+
     console.log('inserted: ' + id);
     return id;
   }

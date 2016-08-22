@@ -59,6 +59,7 @@ class CubicOpenType extends CubicPath {
   }
 
   draw() {
+    //console.log('draw Text', this._text);
     // Draw a default path first
     super.draw({ draggable: !this._indefs });
     this._svg.stroke({width: 0}).fill('#000000');
@@ -256,9 +257,13 @@ export default CubicOpenType;
 Oroboro.classes.CubicOpenType = CubicOpenType;
 
 Oroboro.api.addCaption = (text, file, group) => {
+  file = file || (Oroboro.inEdit ? Oroboro.inEdit._id : null);
+  if(!file)
+    return;
   let inst = Oroboro.files.get(file);
-  if(!group)
-    group = inst._selected.get('group');
+  group = group || 
+    (inst._selected.has('group') ? inst._selected.get('group')._id : null) || 
+    (inst._selected.has('layer') ? inst._selected.get('layer')._id : null);
   if(!group)
     return;
   let obj = {
@@ -273,7 +278,7 @@ Oroboro.api.addCaption = (text, file, group) => {
     },
   }
   obj._id = Items.methods.insert.call({ obj, fileId: file });
-  return inst.waitOn(obj, CubicOpenType);
+  //return inst.waitOn(obj, CubicOpenType);
 }
 
 /*

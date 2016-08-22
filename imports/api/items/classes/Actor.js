@@ -71,7 +71,7 @@ class Actor extends SimplePath {
     if(db) {
       Items.methods.update.call({ id: this._id, modifier: {
         pointList: JSON.stringify(this._pointList)
-      }});
+      }, file: this._file._id, fileCache: this._file._svg.svg() });
     }
   }
 
@@ -303,14 +303,17 @@ SVG.Puppet = SVG.invent({
     },
     setBones: function(){
       for (let ndx in this.bone){
-        //console.log(this.joints[h.Class.bone[ndx][1]].connectable()) 
-         
-        this.bones.push(
-          this.joints[this.bone[ndx][0]+1].connectable({
+        let conn = this.joints[this.bone[ndx][0]+1].connectable({
             container: this.bonesItem,
             width: this.bone[ndx][2]*this.scale
           }, this.joints[this.bone[ndx][1]+1]
-        ));
+        );
+        conn.connector
+          .attr('stroke-width', 10)
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round');
+
+        this.bones.push(conn);
       }
       return this;
     },
@@ -473,11 +476,15 @@ SimpleHuman = {
 export default Actor;
 Oroboro.classes.Actor = Actor;
 Oroboro.api.addActor = (file, group) => {
+  file = file || (Oroboro.inEdit ? Oroboro.inEdit._id : null);
+  if(!file)
+    return;
   let inst = Oroboro.files.get(file);
+  group = group || 
+    (inst._selected.has('group') ? inst._selected.get('group')._id : null) || 
+    (inst._selected.has('layer') ? inst._selected.get('layer')._id : null);
   if(!group)
-    group = inst._selected.get('group');
-  if(group)
-    group = group._id;
+    return;
   let obj = Items.methods.addActor.call({ group, file });
-  return Oroboro.files.get(file).waitOn(obj, Actor);
+  //return Oroboro.files.get(file).waitOn(obj, Actor);
 }
