@@ -1,4 +1,5 @@
 import opentype from 'opentype.js';
+import computeLayout from 'opentype-layout';
 
 import Oroboro from '../../namespace';
 import CubicPath from './CubicPath';
