@@ -63,19 +63,6 @@ class CubicOpenType extends CubicPath {
     // Draw a default path first
     super.draw({ draggable: !this._indefs });
     this._svg.stroke({width: 0}).fill('#000000');
-    /*if(this._indefs) {
-      // Load font and draw the real path
-      let self = this;
-      this._promise.then(function(font) {
-        let path = font.getPath(
-          self._text, 
-          self._pointList[0], 
-          self._pointList[1], 
-          self._font.size);
-        self.OpenTypeToCubic(path.commands)
-          .update();
-      });
-    }*/
     //else
     //  this.wrap();
     return this;
@@ -223,14 +210,6 @@ class CubicOpenType extends CubicPath {
     }
 
     return { lines, width: w2 };
-
-    /*return Promise.all(lines.map(function(l) {
-      return self.textToCubic(l, fontSize).then(function(path) {
-        return path;
-      });
-    })).then(function(paths) {
-      return paths;
-    });*/
   }
 
   textSize(text, fontSize) {
