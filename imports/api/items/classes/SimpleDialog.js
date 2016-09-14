@@ -252,6 +252,7 @@ class SimpleDialog extends SimplePath {
   }
 
   positionText() {
+    console.log('positionText')
     let width = distance(this._boxCorners[0], this._boxCorners[1]),
       height = distance(this._boxCorners[1], this._boxCorners[2]),
       delta = width / 20,

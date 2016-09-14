@@ -8,6 +8,7 @@ import Items from '../items';
 import { 
   wrapText } from '../../../utils/svgUtils';
 
+
 class CubicOpenType extends CubicPath {
   constructor(doc, parent, file) {
     super(doc, parent, file);
@@ -31,7 +32,7 @@ class CubicOpenType extends CubicPath {
 
   defaults() {
     return Object.assign({
-      font: { size: 10 }
+      font: { size: 26 }
     }, super.defaults());
   }
 
@@ -81,7 +82,7 @@ class CubicOpenType extends CubicPath {
     return this;
   }
 
-  textToCubic(text, fontSize) {
+  /*textToCubic(text, fontSize) {
     let self = this;
     text = text || this._text;
     fontSize = fontSize || this._font.size;
@@ -90,9 +91,9 @@ class CubicOpenType extends CubicPath {
       let path = font.getPath(text, self._pointList[0], self._pointList[1], fontSize);
       return self.OpenTypeToCubic(path.commands, false);
     });
-  }
+  }*/
 
-  OpenTypeToCubic(array, chain=true) {
+  /*OpenTypeToCubic(array, chain=true) {
     array = array.map(a => {
       let p = [ a.type ];
       if(typeof a.x1 == 'number')
@@ -118,119 +119,84 @@ class CubicOpenType extends CubicPath {
     }
 
     return array;
+  }*/
+
+  mdrawText(font) {
+    let ndx = 0
+    let prev = [300]
+    let dg = this.drawText(font)
+
+    while(!dg){
+      ndx = ndx + 1
+      if (prev[0] == this._font.size) return true
+      prev[ndx%2] = this._font.size
+      dg = this.drawText(font)
+      
+    }
   }
 
-  wrap(w, h, callb) {
-    //console.log('wrap', this._width, this._height, w, h, this._text);
-    let self = this, _size,
-      type='left',
-      text = this._text,
-      fontSize = this._font.size;
+  drawText(font){
+    let text = this._text, pt = [],
+      box = { 
+        width: this._width, 
+        height: this._height,
+        x1: this._pointList[0],
+        y1: this._pointList[1],
+        x2: this._pointList[0] + this._width,
+        y2: this._pointList[1] + this._height
+      },
+      scale = 1 / font.unitsPerEm * this._font.size,
+      // Layout some text - notice everything is in em units!
+      result = computeLayout(font, text, {
+        lineHeight: 1.2 * font.unitsPerEm, // '2.5em' in font units
+        width: box.width / scale, // '500px' in font units
+        align: "center"
+      });
+    console.log(JSON.stringify(box));
+    for (ndx in result.glyphs){
+      if (0-result.glyphs[ndx].position[1]*scale+box.y1 > box.y2) {
+        this._font.size = this._font.size - 1
+        return false
+      }
+      
+      pt[ndx] = result.glyphs[ndx].data.getPath(result.glyphs[ndx].position[0]*scale+box.x1,0-result.glyphs[ndx].position[1]*scale+box.y1,this._font.size).toPathData(1);
+
+    }
+    if (0-result.glyphs[ndx].position[1]*scale+box.y1 < box.y2 - 50) {
+        this._font.size = this._font.size + 1
+        return false
+      }
+    console.log('this._font.size', this._font.size)
+    //console.log(pt);
+    return pt;
+  }
+
+  wrap(w, h, callb) { 
+    let self = this;
     this._width = w;
     this._height = h;
     this._callback = callb;
-    //type = 'center';
-    //type = 'right';
-    this.textSize(text, fontSize).then(function(size) {
-      _size = size;
-      return self.wrapToRatio(w/h, text, size, fontSize);
-      //return self.wrapToRatio(w, h, text, size, fontSize);
-    //}).then(function(paths) {
-    }).then(function(res) {
-      let { lines, width } = res;
-      fontSize = fontSize * w / width;
-
-      //console.log('new fontSize: ', fontSize);
-
-      return Promise.all(lines.map(function(l) {
-        return self.textToCubic(l, fontSize).then(function(path) {
-          return path;
-        });
-      }))
-    }).then(function(paths) {
-      
-      let rowh = h/paths.length,
-        dy = _size.height*2; // don't know why *2 is needed
-      // Move paths - each on the correct row
-      // First path is ok, the others have to be moved down
-      self._pathArray = paths.map((path) => {
-          // Move each point
-          path = path.map((p) => {
-            return p.map((po,i) => {
-              if(i && i%2 == 0)
-                return po + dy;
-              return po;
-            });
-          });
-
-          dy += rowh;
-          return path;
-        }).reduce((a,b) => {return a.concat(b);});
-      
-        self._svg.plot(self._pathArray);
-        if(callb)
-          callb();
+    this._promise.then(function(font) {
+      let path = self.mdrawText(font);
+      //console.log(path);
+      //self._pathArray = 
+      //self._svg.plot(self._pathArray);
+      if(path)
+        self._svg.plot(path.join(' '));
+      if(callb)
+        callb();
+      //console.log(self._svg)
     });
   }
 
-  // Returns an array of strings (text lines)
-  wrapToWidth(w, charW, text) {
-    return wrapText(text, charW, w);
-  }
-
-  wrapToRatio(ratio, text, size, fontSize) {
-    let self = this,
-      len = text.length,
-      w = size.width,
-      hspace = len < 1000 ? (size.height) : (size.height*3/2),
-      h = size.height + hspace;
-    //console.log('width: ', w);
-    // Utopic number of lines of text
-    let n = Math.ceil(Math.sqrt(w / (ratio * h))),
-      // Utopic width of a text line
-      w2 = w/n,
-      charW = w / len,
-      // True lines of text at the utopic width
-      lines = this.wrapToWidth(w2, charW, text);
-
-    //console.log(n, lines.length, w2)
-    //console.log(JSON.stringify(lines));
-
-    // Text is wrapped in the specified ratio
-    if(n != lines.length) {
-
-      // Ratio: Initial width and the total utopic width
-      let r = w / (w2 * lines.length);
-      //console.log(r)
-
-      if(!fontSize)
-        this._font.size = this._font.size*r-2;
-      fontSize = fontSize ? (fontSize * r-2) : this._font.size;
-
-      lines = this.wrapToWidth(w2-20, charW * r, text);
-    }
-
-    return { lines, width: w2 };
-  }
-
-  textSize(text, fontSize) {
-    let self = this;
-    return this.textToCubic(text, fontSize).then(function(path) {
-      let p = self._file._tempSvg.path(path);
-      let { width, height } = p.bbox();
-      p.remove();
-      return { width, height };
-    });
-  }
-
-  text(text, w, h, callb) {
+  /*text(text, w, h, callb) {
     if(!text)
       return this._text;
     this._text = text;
     this.wrap(w || this._width, h || this._height, callb || this._callback);
     this.rawUpdate({ text });
     return this;
-  }
+  }*/
 };
 
 export default CubicOpenType;
